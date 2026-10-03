@@ -1,0 +1,1661 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="AI守護高齡者：結合居家感測器、智慧手錶與個人化 AI 的長者熱傷害預防系統。Heatstroke prevention for older adults using room sensors, a smartwatch and a personal AI baseline.">
+<meta name="color-scheme" content="light dark">
+<!--fragment:start-->
+<title>AI守護高齡者</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:wght@400;500;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout concept: a calm, legible instrument page. Left-aligned reading columns sit beside device-like panels;
+   the one bold element is the dark night monitor in the hero.
+   Type: Atkinson Hyperlegible (designed for low-vision readers) with Noto Sans TC, because this serves older adults. */
+:root{
+  --bg:#F3F6F6; --surface:#FFFFFF; --surface-2:#E7EEEE;
+  --ink:#0F2128; --ink-2:#3F535A; --muted:#5E7177; --line:#D3DDDE;
+  --accent:#0A7183; --accent-ink:#FFFFFF; --accent-soft:#D5EBEE;
+  --shadow:rgba(15,33,40,.18);
+  /* personal risk level = status scale, fixed in both themes */
+  --lv1:#FAB219; --lv2:#EC835A; --lv3:#D03B3B; --on-warm:#1B1306; --on-red:#FFFFFF;
+  /* daily heat-index tiers = one-hue ordinal ramp (validated light→dark) */
+  --hi1:#F0A465; --hi2:#DE7434; --hi3:#B5461A;
+  /* night monitor screen, dark in both themes */
+  --screen:#0E1A1F; --screen-2:#182A30; --screen-ink:#E8F1F2; --screen-muted:#93A9AE;
+  --screen-line:#27393F; --screen-accent:#3CC2D0; --screen-band:rgba(57,135,229,.26);
+  --font-sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --font-mono:"Atkinson Hyperlegible Mono","Noto Sans TC",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --fs-h1:clamp(2.4rem,1.55rem + 3.7vw,4.1rem);
+  --fs-h2:clamp(1.85rem,1.3rem + 2.1vw,2.75rem);
+  --fs-h3:1.25rem;
+  --lh:1.8; --lh-head:1.28; --track-head:.01em;
+}
+:root[data-lang="en"]{ --lh:1.6; --lh-head:1.12; --track-head:-.018em; }
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B1316; --surface:#111C20; --surface-2:#15232A;
+    --ink:#E5EEF0; --ink-2:#B4C4C8; --muted:#8FA2A8; --line:#25363C;
+    --accent:#47C3D1; --accent-ink:#06242A; --accent-soft:#12333A;
+    --shadow:rgba(0,0,0,.55);
+    --hi1:#9C4A1E; --hi2:#D66A2C; --hi3:#F49A5C;
+    --screen:#071014; --screen-2:#12232A; --screen-ink:#E8F1F2; --screen-muted:#8FA6AB;
+    --screen-line:#20343A; --screen-accent:#3CC2D0; --screen-band:rgba(57,135,229,.28);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B1316; --surface:#111C20; --surface-2:#15232A;
+  --ink:#E5EEF0; --ink-2:#B4C4C8; --muted:#8FA2A8; --line:#25363C;
+  --accent:#47C3D1; --accent-ink:#06242A; --accent-soft:#12333A;
+  --shadow:rgba(0,0,0,.55);
+  --hi1:#9C4A1E; --hi2:#D66A2C; --hi3:#F49A5C;
+  --screen:#071014; --screen-2:#12232A; --screen-ink:#E8F1F2; --screen-muted:#8FA6AB;
+  --screen-line:#20343A; --screen-accent:#3CC2D0; --screen-band:rgba(57,135,229,.28);
+  color-scheme:dark;
+}
+
+/* ---------- base ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-sans);font-size:1.0625rem;line-height:var(--lh);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img,svg{max-width:100%}
+[hidden]{display:none!important}
+/* bilingual: lang="zh-Hant" / lang="en" pairs toggle; lang="zh-TW" marks Chinese that stays visible in both */
+:root:not([data-lang="en"]) [lang="en"]{display:none!important}
+:root[data-lang="en"] [lang="zh-Hant"]{display:none!important}
+h1,h2,h3,h4{margin:0;line-height:var(--lh-head);letter-spacing:var(--track-head);text-wrap:balance}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.mono{font-family:var(--font-mono)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:16px;top:-120px;z-index:60;background:var(--ink);color:var(--bg);padding:.6rem 1rem;border-radius:10px;font-weight:700;text-decoration:none}
+.skip:focus{top:12px}
+.ic{width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bm-bg{fill:var(--ink)} .bm-house{fill:none;stroke:var(--bg);stroke-width:2;stroke-linejoin:round}
+.bm-1{fill:var(--lv1)} .bm-2{fill:var(--lv2)} .bm-3{fill:var(--lv3)}
+
+/* ---------- layout ---------- */
+.wrap{width:100%;max-width:1180px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px)}
+.section{padding-block:clamp(4rem,8vw,6.5rem);scroll-margin-top:72px}
+.band{background:var(--surface-2)}
+.head{display:grid;gap:.85rem;max-width:46rem;margin-block-end:clamp(2rem,4vw,3rem)}
+.eyebrow{font-family:var(--font-mono);font-size:.8125rem;font-weight:600;color:var(--accent);letter-spacing:.08em}
+:root[data-lang="en"] .eyebrow{text-transform:uppercase}
+h2{font-size:var(--fs-h2);font-weight:700}
+.lead{font-size:clamp(1.0625rem,1rem + .3vw,1.1875rem);color:var(--ink-2);max-width:42rem}
+.fine{font-size:.8125rem;color:var(--muted)}
+
+/* ---------- risk level pills (colour + meter icon + label, never colour alone) ---------- */
+[data-l]{--lv-c:var(--surface-2);--lv-on:var(--ink-2);--lv-dot:var(--muted)}
+[data-l="1"]{--lv-c:var(--lv1);--lv-on:var(--on-warm);--lv-dot:var(--lv1)}
+[data-l="2"]{--lv-c:var(--lv2);--lv-on:var(--on-warm);--lv-dot:var(--lv2)}
+[data-l="3"]{--lv-c:var(--lv3);--lv-on:var(--on-red);--lv-dot:var(--lv3)}
+.meter{width:16px;height:12px;flex:none}
+.meter rect{fill:currentColor;opacity:.3}
+[data-l="1"] .meter rect:nth-child(1),
+[data-l="2"] .meter rect:nth-child(-n+2),
+[data-l="3"] .meter rect{opacity:1}
+.lvl{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .72rem .3rem .6rem;border-radius:999px;background:var(--lv-c);color:var(--lv-on);font-weight:700;font-size:.875rem;line-height:1.2;white-space:nowrap;width:fit-content}
+.lvl[data-l="0"]{box-shadow:inset 0 0 0 1px var(--line)}
+.lvl-lg{font-size:1rem;padding:.45rem .9rem .45rem .75rem}
+
+/* ---------- header ---------- */
+.site-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--bg);background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:saturate(1.3) blur(12px);backdrop-filter:saturate(1.3) blur(12px);border-bottom:1px solid var(--line)}
+.header-row{display:flex;align-items:center;gap:.75rem;min-height:64px}
+.brand{display:inline-flex;align-items:center;gap:.6rem;margin-inline-end:auto;min-width:0;color:var(--ink);text-decoration:none;font-weight:800;font-size:clamp(.9rem,.8rem + .6vw,1.0625rem);letter-spacing:var(--track-head)}
+.brand-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-mark{width:30px;height:30px;flex:none}
+.site-nav{display:none;gap:.1rem}
+.site-nav a{color:var(--ink-2);text-decoration:none;font-size:.9375rem;font-weight:500;padding:.4rem .55rem;border-radius:8px;white-space:nowrap}
+.site-nav a:hover{color:var(--ink);background:var(--surface-2)}
+@media (min-width:1080px){:root:not([data-lang="en"]) .site-nav{display:flex}}
+@media (min-width:1220px){.site-nav{display:flex}}
+.lang-switch{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:11px;background:var(--surface);flex:none}
+.lang-switch button{font:inherit;font-size:.875rem;font-weight:700;line-height:1;border:0;border-radius:8px;background:transparent;color:var(--ink-2);padding:.5rem .6rem;min-width:2.6rem;cursor:pointer}
+.lang-switch button:hover{color:var(--ink)}
+.lang-switch button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font:inherit;font-weight:700;font-size:1rem;line-height:1.2;text-decoration:none;padding:.8rem 1.15rem;border-radius:10px;border:1px solid transparent;cursor:pointer}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{background:color-mix(in srgb,var(--accent) 86%,var(--ink))}
+.btn-ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--ink-2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- hero ---------- */
+.hero{padding-block:clamp(2.5rem,6vw,5rem) clamp(3.5rem,7vw,6rem)}
+.hero-grid{display:grid;gap:clamp(2.25rem,5vw,4rem);align-items:center}
+@media (min-width:1000px){.hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.08fr)}}
+.hero-copy{display:grid;gap:1.5rem;align-content:start;min-width:0}
+.pill-tag{display:inline-flex;align-items:center;gap:.5rem;width:fit-content;font-size:.875rem;font-weight:700;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.32rem .85rem}
+.pill-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+h1{font-size:var(--fs-h1);font-weight:800}
+.nb{display:inline-block}
+.hero-lead{font-size:clamp(1.125rem,1rem + .5vw,1.3125rem);color:var(--ink-2);max-width:34rem}
+.cta-row{display:flex;flex-wrap:wrap;gap:.75rem}
+.hero-facts{list-style:none;margin:0;padding:1.25rem 0 0;display:grid;gap:.9rem;border-top:1px solid var(--line)}
+@media (min-width:560px){.hero-facts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.hero-facts li{display:grid;gap:.15rem;align-content:start}
+.fact-k{font-family:var(--font-mono);font-size:.8125rem;font-weight:600;color:var(--muted)}
+.fact-v{font-weight:700;font-size:.98rem;line-height:1.45}
+
+/* ---------- night monitor ---------- */
+.monitor{margin:0;min-width:0;display:grid;gap:1rem;background:var(--screen);color:var(--screen-ink);border:1px solid var(--screen-line);border-radius:20px;padding:clamp(1rem,2.4vw,1.5rem);box-shadow:0 30px 60px -30px var(--shadow)}
+.monitor [data-l="0"]{--lv-c:var(--screen-2);--lv-on:var(--screen-ink)}
+.monitor .lvl[data-l="0"]{box-shadow:inset 0 0 0 1px var(--screen-line)}
+.mon-head{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .65rem}
+.mon-title{font-size:1rem}
+.mon-tag{margin-inline-start:auto;font-size:.75rem;color:var(--screen-muted);border:1px solid var(--screen-line);border-radius:999px;padding:.12rem .6rem}
+.mon-ids{flex-basis:100%;font-size:.8125rem;color:var(--screen-muted)}
+.live{width:8px;height:8px;border-radius:50%;background:var(--screen-accent)}
+@media (prefers-reduced-motion:no-preference){.live{animation:pulse 2.4s ease-out infinite}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--screen-accent) 65%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+.readouts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+@media (min-width:540px){.readouts{grid-template-columns:auto repeat(3,minmax(0,1fr))}}
+.ro{background:var(--screen-2);border-radius:12px;padding:.6rem .8rem;display:grid;gap:.15rem;align-content:start;min-width:0}
+.ro-k{font-size:.75rem;color:var(--screen-muted)}
+.ro-v{font-size:1.5rem;font-weight:700;line-height:1.15;white-space:nowrap}
+.ro-v small{font-size:.8125rem;font-weight:500;color:var(--screen-muted);margin-inline-start:.2rem}
+.ro-s{font-size:.75rem;color:var(--screen-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.night-chart{position:relative;min-height:290px;touch-action:pan-y;border-radius:10px;cursor:crosshair}
+.night-chart:focus-visible{outline-color:var(--screen-accent)}
+.night-chart svg{display:block;width:100%;height:auto;overflow:visible}
+.nc-grid{stroke:var(--screen-line);stroke-width:1}
+.nc-hour{stroke:var(--screen-line);stroke-width:1;opacity:.6}
+.nc-thr{stroke:var(--screen-muted);stroke-width:1;stroke-dasharray:4 4}
+.nc-band{fill:var(--screen-band)}
+.nc-area{fill:var(--screen-ink);opacity:.07}
+.nc-line{fill:none;stroke:var(--screen-ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.nc-warn{stroke:var(--lv1)}
+.nc-txt{fill:var(--screen-muted);font-family:var(--font-mono);font-size:11px}
+.nc-title{fill:var(--screen-ink);font-family:var(--font-sans);font-size:12px;font-weight:700}
+.nc-track{fill:var(--screen-2)}
+.nc-mild{fill:var(--lv1)}
+.nc-ac{fill:var(--screen-accent)}
+.nc-in{font-family:var(--font-sans);font-size:10px;font-weight:700}
+.nc-in-warm{fill:var(--on-warm)}
+.nc-in-ac{fill:var(--screen)}
+.nc-event{stroke:var(--lv1);stroke-width:1;opacity:.75}
+.nc-mark circle{fill:var(--screen-ink);stroke:var(--screen);stroke-width:2}
+.nc-mark text{fill:var(--screen);font-family:var(--font-mono);font-size:11px;font-weight:600}
+.nc-cross{stroke:var(--screen-ink);stroke-width:1;opacity:.5}
+.nc-dot{fill:var(--screen-ink);stroke:var(--screen);stroke-width:2}
+.events{list-style:none;margin:0;padding:0;display:grid;gap:.55rem;font-size:.9375rem;line-height:1.5}
+.events li{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:.6rem;align-items:baseline}
+.ev-n{width:1.35rem;height:1.35rem;border-radius:50%;background:var(--screen-ink);color:var(--screen);display:inline-grid;place-items:center;font:600 .75rem/1 var(--font-mono);transform:translateY(.2rem)}
+.ev-t{font-family:var(--font-mono);font-size:.875rem;color:var(--screen-muted)}
+.mon-foot{display:grid;gap:.6rem;border-top:1px solid var(--screen-line);padding-top:.85rem;font-size:.8125rem;color:var(--screen-muted)}
+.nc-data summary{cursor:pointer;width:fit-content;color:var(--screen-ink);font-weight:700}
+.nc-scroll{max-height:15rem;overflow:auto;margin-top:.6rem;border:1px solid var(--screen-line);border-radius:10px}
+.nc-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.8125rem;font-variant-numeric:tabular-nums;color:var(--screen-ink)}
+.nc-table th,.nc-table td{padding:.35rem .65rem;text-align:right;border-bottom:1px solid var(--screen-line);white-space:nowrap}
+.nc-table th:first-child,.nc-table td:first-child{text-align:left}
+.nc-table thead th{position:sticky;top:0;background:var(--screen-2);color:var(--screen-muted);font-weight:600}
+
+/* ---------- why ---------- */
+.moments{display:grid;gap:1rem}
+@media (min-width:880px){.moments{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.moment{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.5rem;display:grid;gap:.8rem;grid-template-rows:auto auto 1fr auto}
+.moment-ic{width:46px;height:46px;border-radius:13px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.moment-ic .ic{width:24px;height:24px}
+.moment h3{font-size:var(--fs-h3);font-weight:700}
+.moment p{color:var(--ink-2)}
+.moment-does{display:flex;gap:.55rem;align-items:flex-start;border-top:1px solid var(--line);padding-top:.9rem;font-size:.9375rem;font-weight:500}
+.moment-does .ic{color:var(--accent);margin-top:.3em}
+
+/* ---------- how ---------- */
+.how-grid{display:grid;gap:clamp(1.75rem,4vw,3.5rem);align-items:start}
+@media (min-width:980px){.how-grid{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}}
+.plan{margin:0;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:clamp(1rem,2.5vw,1.5rem);display:grid;gap:1rem}
+.plan-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.25rem 1rem}
+.plan-head .mono{font-size:.8125rem;color:var(--muted)}
+.plan-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"bed" "liv" "bal";padding:1px}
+@media (min-width:540px){.plan-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"bed liv" "bed bal"}}
+.room{margin:-1px;border:2px solid var(--ink);background:var(--surface);padding:1rem;display:grid;gap:.55rem;align-content:start;min-width:0}
+.room-bed{grid-area:bed}
+.room-liv{grid-area:liv}
+.room-bal{grid-area:bal;border-style:dashed;border-color:var(--muted);background:var(--bg)}
+.room-top{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.room-name{font-weight:700}
+.hot{font-size:.75rem;font-weight:700;line-height:1;padding:.32rem .55rem;border-radius:999px;background:var(--ink);color:var(--bg);white-space:nowrap}
+.room-read{display:flex;align-items:baseline;flex-wrap:wrap;gap:.3rem}
+.room-t{font-size:2rem;font-weight:700;line-height:1}
+.room-u{font-size:.9375rem;color:var(--ink-2)}
+.room-rh{font-size:.875rem;color:var(--muted);margin-inline-start:.4rem}
+.node-id{display:inline-flex;align-items:center;gap:.45rem;font-family:var(--font-mono);font-size:.8125rem;color:var(--ink-2)}
+.node-id::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--accent)}
+.sensor-list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.3rem}
+.sensor-list li{font-size:.75rem;line-height:1.3;padding:.22rem .5rem;border-radius:999px;border:1px solid var(--line);color:var(--ink-2)}
+.wearer{display:flex;align-items:center;gap:.5rem;font-size:.8125rem;font-weight:500;line-height:1.4;background:var(--accent-soft);border-radius:10px;padding:.45rem .6rem}
+.wearer .ic{color:var(--accent)}
+.plan figcaption{font-size:.9375rem;color:var(--ink-2)}
+.flow{list-style:none;margin:0;padding:0;display:grid;gap:2rem}
+.flow-step{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);gap:1rem}
+.flow-step:not(:last-child)::before{content:"";position:absolute;left:calc(1.125rem - 1px);top:2.75rem;bottom:-1.6rem;width:2px;background:var(--line)}
+.flow-n{width:2.25rem;height:2.25rem;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--font-mono);font-weight:600;font-size:.9375rem;background:var(--bg)}
+.flow-body{display:grid;gap:.55rem;min-width:0}
+.flow-body h3{font-size:1.375rem;font-weight:700}
+.flow-body p{color:var(--ink-2)}
+.chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.35rem}
+.chips li,.chip{font-size:.8125rem;line-height:1.3;padding:.28rem .62rem;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2)}
+
+/* ---------- levels ---------- */
+.ladder{display:grid;gap:1rem;align-items:start}
+@media (min-width:920px){.ladder{grid-template-columns:repeat(3,minmax(0,1fr))}.rung[data-l="1"]{margin-top:3rem}.rung[data-l="2"]{margin-top:1.5rem}}
+.rung{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.4rem;display:grid;gap:.95rem;align-content:start}
+.rung-head{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem .8rem}
+.rung-head h3{font-size:1.375rem;font-weight:700}
+.when{font-size:.9375rem;color:var(--ink-2);display:grid;gap:.15rem}
+.when b{font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--muted);letter-spacing:.06em}
+.inherit{font-size:.875rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:.75rem}
+.acts{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.acts li{display:flex;gap:.6rem;align-items:flex-start;font-weight:500;line-height:1.5}
+.acts .ic{color:var(--accent);margin-top:.18em}
+.rule-note{margin-top:1.25rem;font-size:.875rem;color:var(--muted)}
+.ideas{display:grid;gap:1rem;margin-top:clamp(2.5rem,5vw,3.5rem)}
+@media (min-width:720px){.ideas{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.idea{display:grid;gap:.45rem;align-content:start;padding:1.25rem 1.4rem;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.idea h3{font-size:1.125rem;font-weight:700}
+.idea p{color:var(--ink-2);font-size:.98rem}
+
+/* ---------- scenario player ---------- */
+.player{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:clamp(1rem,2.5vw,1.75rem);display:grid;gap:1.25rem;min-width:0}
+.tabs{display:flex;flex-wrap:wrap;gap:.5rem}
+.tab{display:inline-flex;align-items:center;gap:.5rem;font:inherit;font-weight:700;font-size:.9375rem;line-height:1.2;padding:.6rem .9rem;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink-2);cursor:pointer}
+.tab:hover{color:var(--ink);border-color:var(--ink-2)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.scn-main{display:grid;gap:1rem;min-width:0}
+.scn-intro{color:var(--ink-2)}
+.player-grid{display:grid;gap:1rem;min-width:0}
+@media (min-width:900px){.player-grid{grid-template-columns:13rem minmax(0,1fr);align-items:start}}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:.4rem;grid-template-columns:repeat(var(--n,5),minmax(0,1fr))}
+@media (min-width:900px){.steps{grid-template-columns:minmax(0,1fr)}}
+.step-btn{width:100%;display:grid;gap:.15rem;justify-items:center;font:inherit;line-height:1.3;text-align:center;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:.5rem .3rem;cursor:pointer}
+.step-btn:hover{border-color:var(--ink-2)}
+.step-btn[aria-current="step"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:var(--surface)}
+.sb-top{display:flex;flex-direction:column;align-items:center;gap:.3rem}
+.sb-time{font-family:var(--font-mono);font-weight:600;font-size:.8125rem}
+.step-btn .meter{color:var(--lv-dot)}
+.sb-title{display:none;font-size:.8125rem;color:var(--ink-2)}
+@media (min-width:900px){.step-btn{justify-items:start;text-align:left;padding:.6rem .75rem}.sb-top{flex-direction:row;gap:.5rem}.sb-time{font-size:.9375rem}.sb-title{display:block}}
+.panel{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:clamp(1rem,2.4vw,1.5rem);display:grid;gap:1.15rem;min-width:0}
+.p-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:.75rem 1rem}
+.p-when{display:grid;gap:.1rem}
+.p-time{font-family:var(--font-mono);font-size:.875rem;font-weight:600;color:var(--muted)}
+.p-title{font-size:1.5rem;font-weight:700}
+.p-reads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin:0}
+@media (min-width:640px){.p-reads{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.p-reads>div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.6rem .75rem;min-width:0}
+.p-reads dt{font-size:.75rem;color:var(--muted);line-height:1.4}
+.p-reads dd{margin:0;font-weight:700;font-size:1.3rem;line-height:1.3}
+.p-reads dd small{font-size:.8125rem;font-weight:500;color:var(--muted)}
+.p-reads dd.txt{font-size:1.0625rem}
+.p-reads dd.sub{font-family:var(--font-mono);font-size:.75rem;font-weight:500;color:var(--ink-2)}
+.p-block{display:grid;gap:.55rem}
+.p-block h4{font-family:var(--font-mono);font-size:.75rem;font-weight:600;letter-spacing:.06em;color:var(--muted)}
+:root[data-lang="en"] .p-block h4{text-transform:uppercase}
+.sigs{list-style:none;margin:0;padding:0;display:grid;gap:.5rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:640px){.sigs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.sig{border:1px dashed var(--line);border-radius:12px;padding:.55rem .7rem;display:grid;gap:.1rem;align-content:start;color:var(--muted);line-height:1.4}
+.sig.on{border-style:solid;border-color:var(--ink);color:var(--ink);background:var(--surface)}
+.sig-top{display:flex;justify-content:space-between;align-items:center;gap:.4rem}
+.sig-k{font-family:var(--font-mono);font-weight:600;font-size:.75rem}
+.sig-v{display:inline-flex;align-items:center;gap:.2rem;font-size:.75rem;font-weight:700}
+.sig-t{font-weight:700;font-size:.9375rem}
+.sig-s{font-size:.75rem}
+.p-say{font-size:1.0625rem}
+.p-acts ul{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.p-acts li{display:flex;gap:.6rem;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.6rem .75rem;font-weight:500;line-height:1.5}
+.p-acts .ic{color:var(--accent);margin-top:.18em}
+.p-none{color:var(--muted)}
+.player-nav{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.player-nav .count{font-family:var(--font-mono);font-size:.875rem;color:var(--muted)}
+
+/* ---------- heat index ---------- */
+.hi-grid{display:grid;gap:clamp(1.75rem,4vw,3.5rem);align-items:start}
+@media (min-width:980px){.hi-grid{grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr)}}
+.hi-grid .head{margin-block-end:1.75rem}
+.tier-wrap{overflow-x:auto}
+.tier-table{width:100%;border-collapse:collapse;font-size:.9375rem;line-height:1.5}
+.tier-table th,.tier-table td{text-align:left;padding:.7rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tier-table thead th{font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--muted);letter-spacing:.05em}
+.tier-table td:first-child{white-space:nowrap;font-family:var(--font-mono);font-size:.875rem;font-variant-numeric:tabular-nums}
+.tier{display:inline-flex;align-items:center;gap:.45rem;font-weight:700;white-space:nowrap}
+.tier::before{content:"";width:.8rem;height:.8rem;border-radius:3px;background:var(--tier-c)}
+[data-t="0"]{--tier-c:var(--line)} [data-t="1"]{--tier-c:var(--hi1)} [data-t="2"]{--tier-c:var(--hi2)} [data-t="3"]{--tier-c:var(--hi3)}
+.hi-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:clamp(1.1rem,2.6vw,1.75rem);display:grid;gap:1.35rem;min-width:0}
+.field{display:grid;gap:.3rem}
+.field-top{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
+.field label{font-weight:700}
+.field output{font-family:var(--font-mono);font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:1.75rem;margin:0;accent-color:var(--accent);cursor:pointer}
+.hi-out{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:.75rem 1rem;border-top:1px solid var(--line);padding-top:1.2rem}
+.hi-k{font-size:.8125rem;color:var(--muted)}
+.hi-num{font-size:clamp(2.75rem,2rem + 3vw,3.75rem);font-weight:800;line-height:1;letter-spacing:-.02em}
+.hi-num small{font-size:1.25rem;font-weight:600;color:var(--ink-2);margin-inline-start:.25rem;letter-spacing:0}
+.hi-scale{display:grid;gap:.45rem}
+.hs-bar{position:relative;display:flex;gap:2px;height:12px}
+.hs-seg{height:100%;border-radius:3px;background:var(--tier-c);opacity:.38;transition:opacity .2s}
+.hs-seg.on{opacity:1}
+.hs-seg[data-t="0"]{flex:4.7 1 0} .hs-seg[data-t="1"]{flex:5.5 1 0} .hs-seg[data-t="2"]{flex:8.4 1 0} .hs-seg[data-t="3"]{flex:15.4 1 0}
+.hs-marker{position:absolute;top:-6px;width:4px;height:24px;margin-left:-2px;border-radius:2px;background:var(--ink);box-shadow:0 0 0 2px var(--surface);left:50%}
+@media (prefers-reduced-motion:no-preference){.hs-marker{transition:left .2s}}
+.hs-ticks{position:relative;height:1.1rem;font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.hs-ticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.notif{display:grid;gap:.25rem;background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:.9rem 1rem;box-shadow:0 12px 30px -20px var(--shadow)}
+.notif-app{display:flex;align-items:center;gap:.5rem;font-size:.8125rem;color:var(--muted)}
+.notif-app svg{width:20px;height:20px}
+.notif-app time{margin-inline-start:auto;font-family:var(--font-mono)}
+.notif-title{font-weight:700}
+.notif-body{color:var(--ink-2);font-size:.9375rem}
+
+/* ---------- architecture ---------- */
+.arch{margin:0;display:grid;gap:1rem}
+.arch-flow{display:grid;gap:.5rem}
+@media (min-width:1060px){.arch-flow{grid-template-columns:minmax(0,1fr) 6.75rem minmax(0,1.2fr) 6.75rem minmax(0,1fr);align-items:stretch}}
+.arch-col{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.2rem;display:grid;gap:.85rem;align-content:start;min-width:0}
+.arch-h{font-size:1.0625rem;font-weight:700;display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
+.arch-h small{font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--muted)}
+.road{display:grid;gap:.4rem;border:1px solid var(--line);border-radius:12px;padding:.75rem;background:var(--bg)}
+.road-k{font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.dev{display:flex;justify-content:space-between;gap:.75rem;font-size:.9375rem;line-height:1.45}
+.dev code{font-family:var(--font-mono);font-size:.8125rem;color:var(--ink-2)}
+.road-via{font-size:.8125rem;color:var(--ink-2);line-height:1.45}
+.more{font-size:.8125rem;color:var(--muted);line-height:1.45}
+.arch-link{display:grid;justify-items:center;align-content:center;gap:.35rem;padding:.2rem 0;text-align:center;font-size:.75rem;line-height:1.4;color:var(--ink-2)}
+.arch-link .h{display:none}
+@media (min-width:1060px){.arch-link .h{display:block}.arch-link .v{display:none}}
+.arrow{stroke:var(--muted);stroke-width:2;fill:none}
+.arrow-head{fill:var(--muted)}
+.pipe{list-style:none;margin:0;padding:0;display:grid;counter-reset:pipe}
+.pipe li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 .75rem;padding:.5rem 0;border-bottom:1px solid var(--line);line-height:1.45}
+.pipe li:last-child{border-bottom:0}
+.pipe li::before{counter-increment:pipe;content:counter(pipe);grid-row:span 2;width:1.6rem;height:1.6rem;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--ink-2)}
+.pipe b{font-size:.98rem}
+.pipe span{font-size:.8125rem;color:var(--ink-2)}
+.ext{display:grid;gap:.25rem;border:1px dashed var(--muted);border-radius:12px;padding:.7rem .8rem;font-size:.8125rem;color:var(--ink-2);line-height:1.45}
+.ext b{font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--muted)}
+.outs{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.outs li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 .65rem;padding:.6rem .7rem;border-radius:12px;background:var(--bg);border:1px solid var(--line);line-height:1.45}
+.outs .ic{grid-row:span 2;color:var(--accent);margin-top:.15rem}
+.outs b{font-size:.95rem}
+.outs span{font-size:.8125rem;color:var(--ink-2)}
+.arch figcaption{font-size:.9375rem;color:var(--ink-2);max-width:52rem}
+.arch-notes{display:grid;gap:1.75rem;margin-top:clamp(2.25rem,4vw,3rem)}
+@media (min-width:980px){.arch-notes{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}}
+.points{display:grid;gap:1.4rem}
+.point{display:grid;gap:.35rem}
+.point h3{font-size:1.125rem}
+.point p{color:var(--ink-2)}
+.code{margin:0;min-width:0;background:var(--screen);color:var(--screen-ink);border:1px solid var(--screen-line);border-radius:16px;overflow:hidden}
+.code figcaption{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.25rem 1rem;padding:.7rem 1rem;border-bottom:1px solid var(--screen-line);font-size:.8125rem;color:var(--screen-muted)}
+.code pre{margin:0;padding:1rem;overflow-x:auto;font-family:var(--font-mono);font-size:.8125rem;line-height:1.65}
+.code .k{color:var(--screen-muted)} .code .s{color:var(--screen-accent)} .code .n{color:var(--screen-ink);font-weight:600}
+.stack{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .5rem;margin-top:2rem}
+.stack-k{font-size:.8125rem;font-weight:700;color:var(--muted);margin-inline-end:.35rem}
+
+/* ---------- privacy ---------- */
+.pv-grid{display:grid;gap:1rem}
+@media (min-width:640px){.pv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:980px){.pv-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.pv{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.3rem 1.4rem;display:grid;gap:.5rem;align-content:start}
+.pv h3{font-size:1.125rem;display:flex;align-items:center;gap:.55rem}
+.pv h3 .ic{color:var(--accent)}
+.pv p{color:var(--ink-2);font-size:.98rem}
+
+/* ---------- roadmap ---------- */
+.gantt{list-style:none;margin:0;padding:0;display:grid;gap:.4rem}
+.g-scale,.g-row{display:grid;grid-template-columns:minmax(0,1fr);gap:.3rem}
+@media (min-width:780px){.g-scale,.g-row{grid-template-columns:18rem minmax(0,1fr);gap:1rem;align-items:center}}
+.g-spacer{display:none}
+@media (min-width:780px){.g-spacer{display:block}}
+.g-weeks{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));font-family:var(--font-mono);font-size:.6875rem;color:var(--muted);text-align:center}
+.g-row{padding-block:.35rem;border-bottom:1px solid var(--line)}
+.g-label{display:flex;align-items:baseline;flex-wrap:wrap;gap:.25rem .55rem;min-width:0;line-height:1.4}
+.g-n{font-family:var(--font-mono);font-size:.8125rem;color:var(--muted);width:1rem}
+.g-name{font-weight:700;font-size:.98rem}
+.g-wk{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);white-space:nowrap;margin-inline-start:auto}
+.g-tag{font-family:var(--font-mono);font-size:.6875rem;font-weight:600;padding:.08rem .4rem;border-radius:5px;border:1px solid var(--ink-2);color:var(--ink-2)}
+.g-tag.demo{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.now-tag{font-size:.6875rem;font-weight:700;padding:.1rem .45rem;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+.g-track{position:relative;display:grid;grid-template-columns:repeat(16,minmax(0,1fr));align-items:center;height:28px;background-image:linear-gradient(to right,var(--line) 1px,transparent 1px);background-size:calc(100% / 16) 100%;border-right:1px solid var(--line)}
+.g-bar{grid-column:var(--s) / span var(--len);grid-row:1;height:12px;margin-inline:2px;border-radius:4px;background:var(--ink-2)}
+.g-row.is-now .g-bar{background:var(--accent)}
+.g-gate{grid-column:var(--e);grid-row:1;justify-self:end;width:13px;height:13px;transform:translateX(50%) rotate(45deg);background:var(--bg);border:2px solid var(--ink);border-radius:2px}
+.g-gate.demo{background:var(--accent);border-color:var(--accent)}
+.after-note{margin-top:1rem;font-size:.9375rem;color:var(--ink-2)}
+.gates{list-style:none;margin:clamp(2rem,4vw,2.75rem) 0 0;padding:0;display:grid;gap:.75rem}
+@media (min-width:640px){.gates{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1000px){.gates{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.gate{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1rem;display:grid;gap:.4rem;align-content:start}
+.gate.demo{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.gate-k{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;font-family:var(--font-mono);font-size:.75rem;color:var(--muted)}
+.gate-k b{font-size:1rem;color:var(--ink)}
+.gate p{font-size:.875rem;color:var(--ink-2);line-height:1.55}
+.gate .demo-k{font-size:.75rem;font-weight:700;color:var(--accent)}
+
+/* ---------- pilot ---------- */
+.metrics{display:grid;gap:1rem}
+@media (min-width:900px){.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.3rem 1.4rem;display:grid;gap:.6rem;grid-template-rows:auto 1fr auto}
+.metric h3{font-size:1.125rem}
+.metric p{color:var(--ink-2);font-size:.98rem}
+.measure{display:grid;gap:.1rem;border-top:1px solid var(--line);padding-top:.7rem;font-size:.875rem;line-height:1.45}
+.measure b{font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--muted)}
+.honest{margin-top:1.25rem;max-width:46rem;color:var(--ink-2)}
+.stages-h{margin-top:clamp(3rem,6vw,4.5rem);margin-bottom:1.25rem;font-size:1.5rem;font-weight:700}
+.stages{list-style:none;margin:0;padding:0;display:grid;gap:1.5rem}
+@media (min-width:900px){.stages{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.stage{border-top:3px solid var(--ink);padding-top:1rem;display:grid;gap:.45rem;align-content:start}
+.stage:nth-child(2){border-top-color:var(--ink-2)}
+.stage:nth-child(3){border-top-color:var(--muted);border-top-style:dashed}
+.stage-k{display:flex;align-items:baseline;gap:.6rem}
+.stage-k b{font-family:var(--font-mono);font-size:1.25rem}
+.stage-when{font-size:.8125rem;font-weight:700;color:var(--accent)}
+.stage h3{font-size:1.125rem}
+.stage p{color:var(--ink-2);font-size:.98rem}
+
+/* ---------- future & footer ---------- */
+.future{display:grid;gap:0 2.5rem}
+@media (min-width:720px){.future{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fut{display:grid;gap:.4rem;padding-block:1.25rem;border-top:1px solid var(--line);align-content:start}
+.fut h3{font-size:1.125rem}
+.fut p{color:var(--ink-2)}
+.sdgs{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.75rem}
+.sdg{display:inline-flex;align-items:center;gap:.45rem;font-size:.875rem;font-weight:700;line-height:1.3;padding:.42rem .8rem;border-radius:999px;background:var(--surface-2);color:var(--ink)}
+.sdg b{font-family:var(--font-mono);color:var(--accent)}
+.site-footer{background:var(--surface-2);border-top:1px solid var(--line);padding-block:3rem calc(3rem + env(safe-area-inset-bottom,0px))}
+.footer-grid{display:grid;gap:1.75rem}
+@media (min-width:880px){.footer-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:start}}
+.footer-meta{display:grid;gap:.6rem;font-size:.9375rem;color:var(--ink-2)}
+.footer-note{display:grid;gap:.75rem;font-size:.875rem;color:var(--ink-2)}
+.footer-note strong{color:var(--ink)}
+</style>
+<script>
+(function () {
+  var root = document.documentElement, l = null;
+  try { l = localStorage.getItem('hp-lang'); } catch (e) {}
+  if (l !== 'en' && l !== 'zh') {
+    var first = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+    l = /^zh/i.test(first) ? 'zh' : 'en';
+  }
+  root.setAttribute('data-lang', l);
+  root.setAttribute('lang', l === 'en' ? 'en' : 'zh-Hant');
+})();
+</script>
+</head>
+<body>
+<a class="skip" href="#main"><span lang="zh-Hant">跳到主要內容</span><span lang="en">Skip to content</span></a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-watch" viewBox="0 0 24 24"><rect x="6.5" y="6" width="11" height="12" rx="3"/><path d="M9 6l.6-3h4.8l.6 3M9 18l.6 3h4.8l.6-3M12 9.5V12l1.5 1"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5c3.2 4 5.5 7 5.5 9.8a5.5 5.5 0 0 1-11 0C6.5 10.5 8.8 7.5 12 3.5z"/></symbol>
+  <symbol id="i-ac" viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9.5 4.5 12 6l2.5-1.5M9.5 19.5 12 18l2.5 1.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.8-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 15.2 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><path d="M4 11.5 20 4l-7.5 16-1.8-6.7z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.5 3.5h3l1.6 4.4-2 1.3a11 11 0 0 0 5.7 5.7l1.3-2 4.4 1.6v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4.5 5.7a2 2 0 0 1 2-2.2z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M7 15l3-3.5 2.5 2 4.5-5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-arrow-l" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+</svg>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="#top">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect class="bm-bg" width="32" height="32" rx="9"/><path class="bm-house" d="M7 15.5 16 8l9 7.5V25H7z"/><rect class="bm-1" x="10.5" y="19" width="2.6" height="3.5" rx=".8"/><rect class="bm-2" x="14.7" y="17" width="2.6" height="5.5" rx=".8"/><rect class="bm-3" x="18.9" y="15" width="2.6" height="7.5" rx=".8"/></svg>
+      <span class="brand-text"><span lang="zh-Hant">AI守護高齡者</span><span lang="en">AI Guardian for Elders</span></span>
+    </a>
+    <nav class="site-nav" data-aria-zh="主要導覽" data-aria-en="Main" aria-label="主要導覽">
+      <a href="#how"><span lang="zh-Hant">運作方式</span><span lang="en">How it works</span></a>
+      <a href="#levels"><span lang="zh-Hant">風險分級</span><span lang="en">Risk levels</span></a>
+      <a href="#scenarios"><span lang="zh-Hant">情境</span><span lang="en">Scenarios</span></a>
+      <a href="#heat-index"><span lang="zh-Hant">熱指數</span><span lang="en">Heat index</span></a>
+      <a href="#architecture"><span lang="zh-Hant">架構</span><span lang="en">Architecture</span></a>
+      <a href="#privacy"><span lang="zh-Hant">隱私</span><span lang="en">Privacy</span></a>
+      <a href="#roadmap"><span lang="zh-Hant">進度</span><span lang="en">Roadmap</span></a>
+    </nav>
+    <div class="lang-switch" role="group" aria-label="語言 / Language">
+      <button type="button" id="langZh" data-set-lang="zh" aria-pressed="true" lang="zh-TW">中文</button>
+      <button type="button" id="langEn" data-set-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="pill-tag" lang="zh-TW">AI永續新世代 · 普台科技競賽</p>
+      <h1>
+        <span lang="zh-Hant"><span class="nb">中暑之前，</span><span class="nb">先一步察覺。</span></span>
+        <span lang="en">Catch heatstroke before it starts.</span>
+      </h1>
+      <p class="hero-lead" lang="zh-Hant">結合居家感測器、智慧手錶與個人化 AI，日夜留意長者的身體與環境。一出現異狀，手錶先提醒；需要降溫時，自動開冷氣；風險升高，家人立刻收到通知。</p>
+      <p class="hero-lead" lang="en">Home sensors, a smartwatch and an AI that knows each person’s normal keep watch day and night. At the first sign of trouble the watch nudges them, the air conditioner turns on when cooling is needed, and family is alerted as soon as risk rises.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#scenarios"><span lang="zh-Hant">看系統怎麼判斷</span><span lang="en">Watch it decide</span><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+        <a class="btn btn-ghost" href="#architecture"><span lang="zh-Hant">系統架構</span><span lang="en">See the architecture</span></a>
+      </div>
+      <ul class="hero-facts">
+        <li><span class="fact-k"><span lang="zh-Hant">感測</span><span lang="en">Sensing</span></span><span class="fact-v"><span lang="zh-Hant">每個房間一個節點，加上一支手錶</span><span lang="en">A node in every room, plus one watch</span></span></li>
+        <li><span class="fact-k"><span lang="zh-Hant">判斷</span><span lang="en">Deciding</span></span><span class="fact-v"><span lang="zh-Hant">三級風險，應對逐級累加</span><span lang="en">Three risk levels, with actions that add up</span></span></li>
+        <li><span class="fact-k"><span lang="zh-Hant">試辦</span><span lang="en">Pilot</span></span><span class="fact-v"><span lang="zh-Hant">20 位長者 · 一個夏季</span><span lang="en">20 elders over one summer</span></span></li>
+      </ul>
+    </div>
+
+    <figure class="monitor" aria-labelledby="monCap">
+      <div class="mon-head">
+        <span class="live" aria-hidden="true"></span>
+        <b class="mon-title"><span lang="zh-Hant">悶熱的夜晚 · 臥室</span><span lang="en">A hot night · bedroom</span></b>
+        <span class="mon-tag"><span lang="zh-Hant">示意情境</span><span lang="en">Illustrative</span></span>
+        <span class="mon-ids mono">c-001 · pi-0007 · w-0003</span>
+      </div>
+      <div class="readouts">
+        <div class="ro"><span class="ro-k"><span lang="zh-Hant">時間</span><span lang="en">Time</span></span><span class="ro-v mono" id="roTime">02:10</span></div>
+        <div class="ro"><span class="ro-k"><span lang="zh-Hant">臥室溫度</span><span lang="en">Bedroom</span></span><span class="ro-v"><span id="roTemp">31.4</span><small>°C</small></span></div>
+        <div class="ro"><span class="ro-k"><span lang="zh-Hant">心率</span><span lang="en">Heart rate</span></span><span class="ro-v"><span id="roHr">76</span><small>bpm</small></span><span class="ro-s" id="roHrSub">睡眠基準 +18</span></div>
+        <div class="ro"><span class="ro-k"><span lang="zh-Hant">風險</span><span lang="en">Risk</span></span><span class="lvl" id="roLevel" data-l="1"><svg class="meter" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="7" width="4" height="5" rx="1"/><rect x="6" y="4" width="4" height="8" rx="1"/><rect x="12" y="0" width="4" height="12" rx="1"/></svg><span id="roLevelT">輕度</span></span><span class="ro-s" id="roAc">冷氣 開啟</span></div>
+      </div>
+      <div class="night-chart" id="nightChart" tabindex="0" role="group" data-aria-zh="夜間時間軸：臥室溫度與心率。用左右方向鍵逐 5 分鐘查看。" data-aria-en="Overnight timeline of bedroom temperature and heart rate. Use the left and right arrow keys to move 5 minutes at a time." aria-label="夜間時間軸：臥室溫度與心率。用左右方向鍵逐 5 分鐘查看。" aria-describedby="nightEvents"></div>
+      <p class="sr-only" id="ncLive" aria-live="polite"></p>
+      <ol class="events" id="nightEvents">
+        <li><span class="ev-n">1</span><span class="ev-t">02:00</span><span><span lang="zh-Hant">心率達到睡眠基準 +15 bpm，開始計時。</span><span lang="en">Heart rate reaches 15 bpm over the sleep baseline, so the clock starts.</span></span></li>
+        <li><span class="ev-n">2</span><span class="ev-t">02:10</span><span><span lang="zh-Hant">持續 10 分鐘，判定輕度風險，臥室冷氣自動開啟。</span><span lang="en">It holds for 10 minutes: mild risk, and the bedroom AC turns on.</span></span></li>
+        <li><span class="ev-n">3</span><span class="ev-t">02:38</span><span><span lang="zh-Hant">連續 15 分鐘恢復正常，事件結束，家人不必半夜被叫醒。</span><span lang="en">Normal for 15 minutes in a row: the episode closes and nobody is woken up.</span></span></li>
+      </ol>
+      <div class="mon-foot">
+        <figcaption id="monCap"><span lang="zh-Hant">示意情境：臥室節點與手錶的資料每分鐘合併一次。把游標移到圖上，或聚焦後用方向鍵查看任一分鐘。</span><span lang="en">Illustrative scenario: bedroom-node and watch data are combined every minute. Hover over the chart, or focus it and use the arrow keys, to read any minute.</span></figcaption>
+        <details class="nc-data">
+          <summary><span lang="zh-Hant">查看數據表</span><span lang="en">View data table</span></summary>
+          <div class="nc-scroll"><table class="nc-table" id="nightTable"></table></div>
+        </details>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= WHY ================= -->
+<section class="section band" id="why">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow"><span lang="zh-Hant">為什麼需要</span><span lang="en">Why it matters</span></p>
+      <h2><span lang="zh-Hant">熱傷害，常發生在沒人注意的時候</span><span lang="en">Heat illness often strikes when no one is watching</span></h2>
+      <p class="lead" lang="zh-Hant">長者對熱與口渴的感覺比較遲鈍，也常為了省電不開冷氣。家人無法隨時在旁，等到出現明顯症狀，往往已經需要送醫。我們把應對提前到身體剛出現變化的時候。</p>
+      <p class="lead" lang="en">Older adults feel heat and thirst less sharply, and many skip the air conditioner to save on electricity. Family can’t be there every hour, and by the time symptoms are obvious, a hospital visit is often already needed. We move the response up to the first change in the body.</p>
+    </div>
+    <div class="moments">
+      <article class="moment">
+        <span class="moment-ic"><svg class="ic" aria-hidden="true"><use href="#i-moon"></use></svg></span>
+        <h3><span lang="zh-Hant">熟睡的夜晚</span><span lang="en">Asleep on a hot night</span></h3>
+        <p><span lang="zh-Hant">房間慢慢變熱，人在睡夢中很難察覺。</span><span lang="en">A bedroom heats up slowly, and a sleeping person rarely notices.</span></p>
+        <p class="moment-does"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg><span><span lang="zh-Hant">心率持續偏高時，自動打開臥室冷氣。</span><span lang="en">When heart rate stays high, the bedroom AC turns on.</span></span></p>
+      </article>
+      <article class="moment">
+        <span class="moment-ic"><svg class="ic" aria-hidden="true"><use href="#i-home"></use></svg></span>
+        <h3><span lang="zh-Hant">獨自在家</span><span lang="en">Home alone</span></h3>
+        <p><span lang="zh-Hant">身邊沒有人，早期徵兆沒人發現。</span><span lang="en">With no one around, the early signs go unnoticed.</span></p>
+        <p class="moment-does"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg><span><span lang="zh-Hant">風險升高時依序通知家人，並說明原因。</span><span lang="en">As risk rises, family is alerted in order, with the reasons.</span></span></p>
+      </article>
+      <article class="moment">
+        <span class="moment-ic"><svg class="ic" aria-hidden="true"><use href="#i-sun"></use></svg></span>
+        <h3><span lang="zh-Hant">外出途中</span><span lang="en">Out in the midday heat</span></h3>
+        <p><span lang="zh-Hant">中午走路辦事，離涼爽的地方很遠。</span><span lang="en">A midday errand on foot, far from anywhere cool.</span></p>
+        <p class="moment-does"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg><span><span lang="zh-Hant">提醒休息補水，必要時導航到最近的避暑地點。</span><span lang="en">A prompt to rest and drink, and if needed, directions to the nearest cooling spot.</span></span></p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW ================= -->
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow"><span lang="zh-Hant">運作方式</span><span lang="en">How it works</span></p>
+      <h2><span lang="zh-Hant">監測、預測、引導</span><span lang="en">Monitor, predict, guide</span></h2>
+      <p class="lead" lang="zh-Hant">家中每個房間放一個小型感測節點，長者戴一支市售智慧手錶。所有資料送到同一台雲端伺服器，合併分析後，再把結果送回手錶、家人與冷氣。</p>
+      <p class="lead" lang="en">Each room gets a small sensor node, and the elder wears an off-the-shelf smartwatch. Everything goes to one cloud server, which combines and analyzes it, then sends results back to the watch, the family and the air conditioner.</p>
+    </div>
+    <div class="how-grid">
+      <figure class="plan" aria-labelledby="planCap">
+        <div class="plan-head">
+          <b><span lang="zh-Hant">一位長者的家</span><span lang="en">One elder’s home</span></b>
+          <span class="mono">c-001 · 02:10</span>
+        </div>
+        <div class="plan-grid">
+          <div class="room room-bed">
+            <div class="room-top"><span class="room-name"><span lang="zh-Hant">臥室</span><span lang="en">Bedroom</span></span><span class="hot"><span lang="zh-Hant">最熱</span><span lang="en">Hottest</span></span></div>
+            <div class="room-read"><span class="room-t">31.4</span><span class="room-u">°C</span><span class="room-rh"><span lang="zh-Hant">濕度</span><span lang="en">RH</span> 72%</span></div>
+            <span class="node-id">pi-0007</span>
+            <ul class="sensor-list">
+              <li><span lang="zh-Hant">溫濕度</span><span lang="en">Temp &amp; humidity</span></li>
+              <li><span lang="zh-Hant">人體存在</span><span lang="en">Presence</span></li>
+              <li><span lang="zh-Hant">冷氣運轉</span><span lang="en">AC running</span></li>
+              <li><span lang="zh-Hant">紅外線遙控</span><span lang="en">IR remote</span></li>
+            </ul>
+            <div class="wearer"><svg class="ic" aria-hidden="true"><use href="#i-watch"></use></svg><span><span lang="zh-Hant">長者在這裡 · 手錶 w-0003 · 76 bpm</span><span lang="en">The elder is here · watch w-0003 · 76 bpm</span></span></div>
+          </div>
+          <div class="room room-liv">
+            <div class="room-top"><span class="room-name"><span lang="zh-Hant">客廳</span><span lang="en">Living room</span></span></div>
+            <div class="room-read"><span class="room-t">29.6</span><span class="room-u">°C</span><span class="room-rh"><span lang="zh-Hant">濕度</span><span lang="en">RH</span> 70%</span></div>
+            <span class="node-id">pi-0008</span>
+            <ul class="sensor-list">
+              <li><span lang="zh-Hant">溫濕度</span><span lang="en">Temp &amp; humidity</span></li>
+              <li><span lang="zh-Hant">人體存在</span><span lang="en">Presence</span></li>
+              <li><span lang="zh-Hant">冷氣運轉</span><span lang="en">AC running</span></li>
+              <li><span lang="zh-Hant">紅外線遙控</span><span lang="en">IR remote</span></li>
+            </ul>
+          </div>
+          <div class="room room-bal">
+            <div class="room-top"><span class="room-name"><span lang="zh-Hant">陽台 · 戶外</span><span lang="en">Balcony · outdoors</span></span></div>
+            <div class="room-read"><span class="room-t">28.6</span><span class="room-u">°C</span><span class="room-rh"><span lang="zh-Hant">濕度</span><span lang="en">RH</span> 80%</span></div>
+            <span class="node-id">pi-0009</span>
+            <ul class="sensor-list">
+              <li><span lang="zh-Hant">戶外溫濕度</span><span lang="en">Outdoor temp &amp; humidity</span></li>
+            </ul>
+          </div>
+        </div>
+        <figcaption id="planCap"><span lang="zh-Hant">凌晨 02:10，臥室 31.4 °C，比戶外的 28.6 °C 還熱。每個房間節點量自己的空間，手錶跟著人走；資料累積之後，系統能告訴家人哪個房間最熱。</span><span lang="en">At 02:10 the bedroom is 31.4 °C, hotter than the 28.6 °C outside. Each room node measures its own space and the watch goes wherever the person goes. Over time, the data shows the family which room runs hottest.</span></figcaption>
+      </figure>
+
+      <ol class="flow">
+        <li class="flow-step">
+          <span class="flow-n">1</span>
+          <div class="flow-body">
+            <h3><span lang="zh-Hant">監測</span><span lang="en">Monitor</span></h3>
+            <p lang="zh-Hant">房間節點每 10 秒量一次溫度、濕度、有沒有人、冷氣有沒有開，陽台節點量戶外溫濕度。手錶量心率、活動狀態與 GPS，支援的錶款再加上皮膚溫度。</p>
+            <p lang="en">Room nodes read temperature, humidity, presence and whether the AC is running every 10 seconds, and a balcony node reads outdoor conditions. The watch tracks heart rate, activity and GPS, plus skin temperature on models that support it.</p>
+            <ul class="chips">
+              <li><span lang="zh-Hant">溫濕度</span><span lang="en">Temp &amp; humidity</span></li>
+              <li><span lang="zh-Hant">人體存在</span><span lang="en">Presence</span></li>
+              <li><span lang="zh-Hant">冷氣運轉</span><span lang="en">AC running</span></li>
+              <li><span lang="zh-Hant">心率</span><span lang="en">Heart rate</span></li>
+              <li><span lang="zh-Hant">活動狀態</span><span lang="en">Activity</span></li>
+              <li>GPS</li>
+            </ul>
+          </div>
+        </li>
+        <li class="flow-step">
+          <span class="flow-n">2</span>
+          <div class="flow-body">
+            <h3><span lang="zh-Hant">預測</span><span lang="en">Predict</span></h3>
+            <p lang="zh-Hant">伺服器每分鐘把各房間與手錶的資料對齊成一條時間軸，拿長者自己的基準值來比：先排除運動，再看數值能不能自己恢復，最後決定風險等級。</p>
+            <p lang="en">Every minute, the server lines up room and watch data into one timeline and compares it with the person’s own baseline. It rules out exercise first, waits to see whether the numbers recover, then sets the risk level.</p>
+            <ul class="chips">
+              <li><span lang="zh-Hant">個人基準值</span><span lang="en">Personal baseline</span></li>
+              <li><span lang="zh-Hant">活動判斷</span><span lang="en">Activity check</span></li>
+              <li><span lang="zh-Hant">恢復觀察</span><span lang="en">Recovery watch</span></li>
+              <li><span lang="zh-Hant">熱島門檻</span><span lang="en">Heat-island thresholds</span></li>
+            </ul>
+          </div>
+        </li>
+        <li class="flow-step">
+          <span class="flow-n">3</span>
+          <div class="flow-body">
+            <h3><span lang="zh-Hant">引導</span><span lang="en">Guide</span></h3>
+            <p lang="zh-Hant">依風險等級逐步行動，從手錶輕震、補水提醒，到自動開冷氣、通知家人、導航到最近的避暑地點。</p>
+            <p lang="en">Actions step up with the risk level, from a gentle watch vibration and a reminder to drink water to switching on the AC, alerting family and giving directions to the nearest cooling spot.</p>
+            <ul class="chips">
+              <li><span lang="zh-Hant">手錶震動</span><span lang="en">Watch vibration</span></li>
+              <li><span lang="zh-Hant">自動開冷氣</span><span lang="en">AC on</span></li>
+              <li><span lang="zh-Hant">通知家人</span><span lang="en">Family alerts</span></li>
+              <li><span lang="zh-Hant">避暑導航</span><span lang="en">Cooling-spot directions</span></li>
+            </ul>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEVELS ================= -->
+<section class="section band" id="levels">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow"><span lang="zh-Hant">風險分級 · 規則 v1</span><span lang="en">Risk levels · rule v1</span></p>
+      <h2><span lang="zh-Hant">三級風險，應對逐級累加</span><span lang="en">Three levels, and the actions add up</span></h2>
+      <p class="lead" lang="zh-Hant">每升一級，都保留前一級的行動，再多加一層保護。數值連續 15 分鐘恢復正常，才會一級一級降回來。</p>
+      <p class="lead" lang="en">Each level keeps everything the level below does and adds more. Levels step back down one at a time, and only after the numbers stay normal for 15 minutes.</p>
+    </div>
+
+    <div class="ladder">
+      <article class="rung" data-l="1">
+        <div class="rung-head">
+          <span class="lvl" data-l="1"><svg class="meter" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="7" width="4" height="5" rx="1"/><rect x="6" y="4" width="4" height="8" rx="1"/><rect x="12" y="0" width="4" height="12" rx="1"/></svg><span lang="zh-Hant">輕度</span><span lang="en">Mild</span></span>
+          <h3><span lang="zh-Hant">自我降溫</span><span lang="en">Self-cooling</span></h3>
+        </div>
+        <p class="when"><b><span lang="zh-Hant">何時</span><span lang="en">WHEN</span></b><span lang="zh-Hant">環境偏熱、心率持續高於個人基準，而且不是在運動。</span><span lang="en">It’s hot, heart rate stays above the personal baseline, and exercise doesn’t explain it.</span></p>
+        <ul class="acts">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-watch"></use></svg><span><span lang="zh-Hant">手錶震動提醒</span><span lang="en">The watch vibrates</span></span></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-drop"></use></svg><span><span lang="zh-Hant">提示補水、休息</span><span lang="en">A prompt to drink water and rest</span></span></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-ac"></use></svg><span><span lang="zh-Hant">若正在睡覺，自動開冷氣</span><span lang="en">If they’re asleep, the AC turns on</span></span></li>
+        </ul>
+      </article>
+      <article class="rung" data-l="2">
+        <div class="rung-head">
+          <span class="lvl" data-l="2"><svg class="meter" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="7" width="4" height="5" rx="1"/><rect x="6" y="4" width="4" height="8" rx="1"/><rect x="12" y="0" width="4" height="12" rx="1"/></svg><span lang="zh-Hant">中度</span><span lang="en">Moderate</span></span>
+          <h3><span lang="zh-Hant">環境降溫</span><span lang="en">Environmental cooling</span></h3>
+        </div>
+        <p class="when"><b><span lang="zh-Hant">何時</span><span lang="en">WHEN</span></b><span lang="zh-Hant">輕度處理 30 分鐘後仍未改善，或心率高出基準 25 bpm 以上。</span><span lang="en">Mild risk hasn’t improved 30 minutes after its actions, or heart rate is 25 bpm or more above baseline.</span></p>
+        <p class="inherit"><span lang="zh-Hant">輕度的所有行動，再加上：</span><span lang="en">Everything at mild, plus:</span></p>
+        <ul class="acts">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg><span><span lang="zh-Hant">通知家人，並說明原因</span><span lang="en">Family is alerted, with the reasons</span></span></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-ac"></use></svg><span><span lang="zh-Hant">在室內：開冷氣</span><span lang="en">Indoors: the AC turns on</span></span></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-nav"></use></svg><span><span lang="zh-Hant">在戶外：導航到最近的避暑地點</span><span lang="en">Outdoors: directions to the nearest cooling spot</span></span></li>
+        </ul>
+      </article>
+      <article class="rung" data-l="3">
+        <div class="rung-head">
+          <span class="lvl" data-l="3"><svg class="meter" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="7" width="4" height="5" rx="1"/><rect x="6" y="4" width="4" height="8" rx="1"/><rect x="12" y="0" width="4" height="12" rx="1"/></svg><span lang="zh-Hant">高度</span><span lang="en">High</span></span>
+          <h3><span lang="zh-Hant">第三方介入</span><span lang="en">Third-party help</span></h3>
+        </div>
+        <p class="when"><b><span lang="zh-Hant">何時</span><span lang="en">WHEN</span></b><span lang="zh-Hant">中度處理 20 分鐘後仍未改善，或長者對提醒沒有回應、也沒有動作。</span><span lang="en">Moderate risk hasn’t improved 20 minutes after its actions, or the elder doesn’t respond to prompts and isn’t moving.</span></p>
+        <p class="inherit"><span lang="zh-Hant">中度的所有行動，再加上：</span><span lang="en">Everything at moderate, plus:</span></p>
+        <ul class="acts">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-pin"></use></svg><span><span lang="zh-Hant">傳送位置給家人</span><span lang="en">Location is sent to family</span></span></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-eye"></use></svg><span><span lang="zh-Hant">持續監測，不中斷</span><span lang="en">Continuous monitoring</span></span></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg><span><span lang="zh-Hant">依序聯絡緊急聯絡人，是否撥打 119 由家人決定</span><span lang="en">Contacts are reached in order; the family decides whether to call 119</span></span></li>
+        </ul>
+      </article>
+    </div>
+    <p class="rule-note"><span lang="zh-Hant">時間與門檻是規則 v1 的起始值，會與護理顧問一起調整。</span><span lang="en">Times and thresholds are rule v1 starting values, to be tuned with our nursing advisor.</span></p>
+
+    <div class="ideas">
+      <article class="idea">
+        <h3><span lang="zh-Hant">每個人都有自己的基準</span><span lang="en">A baseline for each person</span></h3>
+        <p lang="zh-Hant">每個人的正常心率都不一樣。系統用過去兩週休息與睡眠時的資料，分別建立清醒與睡眠的基準；前 7 天先用保守的預設值。</p>
+        <p lang="en">Everyone’s normal heart rate is different. The system builds separate awake and asleep baselines from the last two weeks of rest and sleep, and uses conservative defaults for the first 7 days.</p>
+      </article>
+      <article class="idea">
+        <h3><span lang="zh-Hant">先排除運動</span><span lang="en">Exercise is ruled out first</span></h3>
+        <p lang="zh-Hant">走路、運動時心率本來就會上升。活動結束 10 分鐘後，系統才重新判斷。</p>
+        <p lang="en">Heart rate naturally rises with walking and exercise. The system re-checks 10 minutes after the activity ends.</p>
+      </article>
+      <article class="idea">
+        <h3><span lang="zh-Hant">先觀察能不能恢復</span><span lang="en">Wait for recovery</span></h3>
+        <p lang="zh-Hant">每一級行動之後都先觀察一段時間，沒有改善才升級，避免太多誤報讓家人疲乏。</p>
+        <p lang="en">After each level’s actions, the system waits to see whether things improve before escalating, so families aren’t worn down by false alarms.</p>
+      </article>
+      <article class="idea">
+        <h3><span lang="zh-Hant">依地區調整門檻</span><span lang="en">Thresholds tuned by area</span></h3>
+        <p lang="zh-Hant">用 QGIS 分析都市熱島，替比較熱的地區調低環境門檻。</p>
+        <p lang="en">A QGIS urban heat-island map lowers the heat threshold in hotter neighbourhoods.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCENARIOS ================= -->
+<section class="section" id="scenarios">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow"><span lang="zh-Hant">情境重播</span><span lang="en">Scenario replay</span></p>
+      <h2><span lang="zh-Hant">看系統怎麼判斷</span><span lang="en">Watch it decide</span></h2>
+      <p class="lead" lang="zh-Hant">選一個情境，一步一步看規則怎麼運作。數值為示意，規則與門檻依規則 v1。</p>
+      <p class="lead" lang="en">Pick a scenario and step through how the rules respond. The numbers are illustrative; the rules and thresholds follow rule v1.</p>
+    </div>
+    <div class="player" id="player">
+      <div class="tabs" role="tablist" data-aria-zh="情境" data-aria-en="Scenarios" aria-label="情境">
+        <button type="button" class="tab" role="tab" id="tab-night" data-scn="night" aria-controls="scnPanel" aria-selected="true"><svg class="ic" aria-hidden="true"><use href="#i-moon"></use></svg><span lang="zh-Hant">熱夜熟睡</span><span lang="en">Hot night, asleep</span></button>
+        <button type="button" class="tab" role="tab" id="tab-walk" data-scn="walk" aria-controls="scnPanel" aria-selected="false" tabindex="-1"><svg class="ic" aria-hidden="true"><use href="#i-sun"></use></svg><span lang="zh-Hant">午後外出</span><span lang="en">Afternoon errand</span></button>
+        <button type="button" class="tab" role="tab" id="tab-alone" data-scn="alone" aria-controls="scnPanel" aria-selected="false" tabindex="-1"><svg class="ic" aria-hidden="true"><use href="#i-home"></use></svg><span lang="zh-Hant">獨居無回應</span><span lang="en">Alone, no response</span></button>
+      </div>
+      <div class="scn-main" id="scnPanel" role="tabpanel" aria-labelledby="tab-night">
+        <p class="scn-intro" id="scnIntro"></p>
+        <div class="player-grid">
+          <ol class="steps" id="scnSteps" data-aria-zh="步驟" data-aria-en="Steps" aria-label="步驟"></ol>
+          <div class="panel" id="scnStep" aria-live="polite"></div>
+        </div>
+        <div class="player-nav">
+          <button type="button" class="btn btn-ghost" id="scnPrev"><svg class="ic" aria-hidden="true"><use href="#i-arrow-l"></use></svg><span id="scnPrevT">上一步</span></button>
+          <span class="count" id="scnCount">3 / 5</span>
+          <button type="button" class="btn btn-primary" id="scnNext"><span id="scnNextT">下一步</span><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HEAT INDEX ================= -->
+<section class="section band" id="heat-index">
+  <div class="wrap hi-grid">
+    <div>
+      <div class="head">
+        <p class="eyebrow"><span lang="zh-Hant">每日 07:30 · 勞動部熱指數分級</span><span lang="en">Daily at 07:30 · Ministry of Labor heat index</span></p>
+        <h2><span lang="zh-Hant">每天早上，先知道今天有多熱</span><span lang="en">Every morning, a heads-up on the heat</span></h2>
+        <p class="lead" lang="zh-Hant">每天 07:30，系統用長者所在地區的氣象署預報最高溫與濕度計算熱指數，依勞動部分級送出一則出門前的提醒。熱指數只用來提醒，不用來判斷是否中暑。</p>
+        <p class="lead" lang="en">At 07:30 each day, the system takes the weather service’s forecast high and humidity for the elder’s area, computes the heat index and sends one reminder before they head out, graded on the Ministry of Labor scale. The heat index is only a reminder and never decides heatstroke risk.</p>
+      </div>
+      <div class="tier-wrap">
+        <table class="tier-table">
+          <thead><tr>
+            <th scope="col"><span lang="zh-Hant">熱指數</span><span lang="en">HEAT INDEX</span></th>
+            <th scope="col"><span lang="zh-Hant">等級</span><span lang="en">LEVEL</span></th>
+            <th scope="col"><span lang="zh-Hant">提醒內容</span><span lang="en">REMINDER</span></th>
+          </tr></thead>
+          <tbody>
+            <tr><td>26.7–32.2 °C</td><td><span class="tier" data-t="1"><span lang="zh-Hant">輕度</span><span lang="en">Mild</span></span></td><td><span lang="zh-Hant">多補充水分，減少日曬。</span><span lang="en">Drink more water and limit time in the sun.</span></td></tr>
+            <tr><td>32.2–40.6 °C</td><td><span class="tier" data-t="2"><span lang="zh-Hant">中度</span><span lang="en">Moderate</span></span></td><td><span lang="zh-Hant">避免中午外出，出門請規劃陰涼路線。</span><span lang="en">Avoid going out at midday, and plan a shaded route.</span></td></tr>
+            <tr><td>40.6–54.4 °C</td><td><span class="tier" data-t="3"><span lang="zh-Hant">高度</span><span lang="en">High</span></span></td><td><span lang="zh-Hant">盡量不要外出，待在通風或有冷氣的室內。</span><span lang="en">Better to stay in, in a ventilated or air-conditioned room.</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="hi-card" id="hiCard">
+      <div class="field">
+        <div class="field-top"><label for="hiT"><span lang="zh-Hant">預報最高溫</span><span lang="en">Forecast high</span></label><output id="hiTOut" for="hiT">33.0 °C</output></div>
+        <input type="range" id="hiT" min="26" max="39" step="0.5" value="33">
+      </div>
+      <div class="field">
+        <div class="field-top"><label for="hiRH"><span lang="zh-Hant">相對濕度</span><span lang="en">Relative humidity</span></label><output id="hiRHOut" for="hiRH">55%</output></div>
+        <input type="range" id="hiRH" min="30" max="95" step="1" value="55">
+      </div>
+      <div class="hi-out" aria-live="polite">
+        <div>
+          <div class="hi-k"><span lang="zh-Hant">今日熱指數</span><span lang="en">Today’s heat index</span></div>
+          <div class="hi-num"><span id="hiNum">37.8</span><small>°C</small></div>
+        </div>
+        <span class="tier" id="hiTier" data-t="2"><span id="hiTierT">中度</span></span>
+      </div>
+      <div class="hi-scale" aria-hidden="true">
+        <div class="hs-bar">
+          <span class="hs-seg" data-t="0"></span><span class="hs-seg" data-t="1"></span><span class="hs-seg on" data-t="2"></span><span class="hs-seg" data-t="3"></span>
+          <span class="hs-marker" id="hiMark"></span>
+        </div>
+        <div class="hs-ticks">
+          <span style="left:calc((100% - 6px) * 0.1382 + 1px)">26.7</span>
+          <span style="left:calc((100% - 6px) * 0.3000 + 3px)">32.2</span>
+          <span style="left:calc((100% - 6px) * 0.5471 + 5px)">40.6</span>
+          <span style="left:calc((100% - 6px) * 0.9529 + 6px);transform:translateX(-80%)">54.4</span>
+        </div>
+      </div>
+      <div class="notif">
+        <div class="notif-app">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><rect class="bm-bg" width="32" height="32" rx="9"/><path class="bm-house" d="M7 15.5 16 8l9 7.5V25H7z"/><rect class="bm-1" x="10.5" y="19" width="2.6" height="3.5" rx=".8"/><rect class="bm-2" x="14.7" y="17" width="2.6" height="5.5" rx=".8"/><rect class="bm-3" x="18.9" y="15" width="2.6" height="7.5" rx=".8"/></svg>
+          <span><span lang="zh-Hant">AI守護高齡者</span><span lang="en">AI Guardian for Elders</span></span>
+          <time>07:30</time>
+        </div>
+        <div class="notif-title" id="hiNotifTitle">今日熱指數 37.8 °C · 中度</div>
+        <div class="notif-body" id="hiNotifBody">避免中午外出，出門請規劃陰涼路線。</div>
+      </div>
+      <p class="fine"><span lang="zh-Hant">計算方式：美國國家氣象局 Rothfusz 迴歸式（含低濕與高濕修正），換算為攝氏後依勞動部分級。</span><span lang="en">Computed with the US National Weather Service Rothfusz regression (with its low- and high-humidity adjustments), converted to °C and graded on the Ministry of Labor scale.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ARCHITECTURE ================= -->
+<section class="section" id="architecture">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow"><span lang="zh-Hant">系統架構</span><span lang="en">Architecture</span></p>
+      <h2><span lang="zh-Hant">一台伺服器，照顧許多長者</span><span lang="en">One server, many elders</span></h2>
+      <p class="lead" lang="zh-Hant">樹莓派只負責量測、檢查、暫存與傳送，所有分析都在伺服器完成。每筆資料都帶著長者、節點、感測器、手錶與時間的編號，新增長者或設備只要登記，不用改程式。</p>
+      <p class="lead" lang="en">Each Raspberry Pi only measures, checks, buffers and sends. All analysis happens on the server. Every reading carries IDs for the elder, node, sensor, watch and time, so adding a person or a device is a registration with no code changes.</p>
+    </div>
+
+    <figure class="arch" aria-labelledby="archCap">
+      <div class="arch-flow">
+        <section class="arch-col" aria-labelledby="archHome">
+          <h3 class="arch-h" id="archHome"><span><span lang="zh-Hant">家中</span><span lang="en">At home</span></span><small>c-001</small></h3>
+          <div class="road">
+            <span class="road-k"><span lang="zh-Hant">房間節點 · 樹莓派</span><span lang="en">ROOM NODES · RASPBERRY PI</span></span>
+            <div class="dev"><span><span lang="zh-Hant">臥室</span><span lang="en">Bedroom</span></span><code>pi-0007</code></div>
+            <div class="dev"><span><span lang="zh-Hant">客廳</span><span lang="en">Living room</span></span><code>pi-0008</code></div>
+            <div class="dev"><span><span lang="zh-Hant">陽台（戶外）</span><span lang="en">Balcony (outdoor)</span></span><code>pi-0009</code></div>
+            <p class="road-via"><span lang="zh-Hant">量測 → 檢查 → 先存本機 → 傳送</span><span lang="en">Measure → check → save locally → send</span></p>
+          </div>
+          <div class="road">
+            <span class="road-k"><span lang="zh-Hant">穿戴裝置</span><span lang="en">WEARABLE</span></span>
+            <div class="dev"><span><span lang="zh-Hant">智慧手錶</span><span lang="en">Smartwatch</span></span><code>w-0003</code></div>
+            <p class="road-via"><span lang="zh-Hant">藍牙 → 長者手機 App</span><span lang="en">Bluetooth → the elder’s phone app</span></p>
+          </div>
+          <p class="more"><span lang="zh-Hant">c-002、c-003 … 每位長者都有自己的一組設備與獨立通道。</span><span lang="en">c-002, c-003 … every elder has their own devices and a separate lane.</span></p>
+        </section>
+
+        <div class="arch-link">
+          <svg class="h" width="72" height="14" viewBox="0 0 72 14" aria-hidden="true"><line class="arrow" x1="2" y1="7" x2="62" y2="7"/><path class="arrow-head" d="M60 1.5 70 7l-10 5.5z"/></svg>
+          <svg class="v" width="14" height="36" viewBox="0 0 14 36" aria-hidden="true"><line class="arrow" x1="7" y1="2" x2="7" y2="26"/><path class="arrow-head" d="M1.5 24 7 34l5.5-10z"/></svg>
+          <span><span lang="zh-Hant">節點：MQTT（TLS 加密）<br>手錶：App → HTTPS</span><span lang="en">Nodes: MQTT over TLS<br>Watch: app → HTTPS</span></span>
+        </div>
+
+        <section class="arch-col" aria-labelledby="archServer">
+          <h3 class="arch-h" id="archServer"><span><span lang="zh-Hant">雲端伺服器</span><span lang="en">Cloud server</span></span><small><span lang="zh-Hant">每分鐘</span><span lang="en">every minute</span></small></h3>
+          <ol class="pipe">
+            <li><b><span lang="zh-Hant">接收資料</span><span lang="en">Receive</span></b><span><span lang="zh-Hant">節點與手錶分兩條路進來</span><span lang="en">Nodes and the watch arrive by separate roads</span></span></li>
+            <li><b><span lang="zh-Hant">辨識長者</span><span lang="en">Identify the elder</span></b><span><span lang="zh-Hant">用設備憑證與登記表確認屬於誰</span><span lang="en">Device credential plus registry decide whose data it is</span></span></li>
+            <li><b><span lang="zh-Hant">儲存資料</span><span lang="en">Store</span></b><span><span lang="zh-Hant">原始與處理後資料，依長者分開保存</span><span lang="en">Raw and processed data, kept per elder</span></span></li>
+            <li><b><span lang="zh-Hant">合併資料</span><span lang="en">Combine</span></b><span><span lang="zh-Hant">對齊成每分鐘一列的時間軸</span><span lang="en">Aligned into one row per minute</span></span></li>
+            <li><b><span lang="zh-Hant">分析資料</span><span lang="en">Analyze</span></b><span><span lang="zh-Hant">個人基準、活動判斷、恢復觀察、風險等級</span><span lang="en">Baseline, activity check, recovery watch, risk level</span></span></li>
+            <li><b><span lang="zh-Hant">產生結果</span><span lang="en">Generate results</span></b><span><span lang="zh-Hant">每次等級變化都留下原因與紀錄</span><span lang="en">Every level change is logged with its reasons</span></span></li>
+          </ol>
+          <p class="ext"><b><span lang="zh-Hant">外部資料 → 分析</span><span lang="en">OUTSIDE DATA → ANALYZE</span></b><span><span lang="zh-Hant">氣象署觀測與預報 · 勞動部熱指數 · QGIS 都市熱島 · Google 地圖</span><span lang="en">CWA weather observations and forecasts · Ministry of Labor heat index · QGIS urban heat islands · Google Maps</span></span></p>
+        </section>
+
+        <div class="arch-link">
+          <svg class="h" width="72" height="14" viewBox="0 0 72 14" aria-hidden="true"><line class="arrow" x1="2" y1="7" x2="62" y2="7"/><path class="arrow-head" d="M60 1.5 70 7l-10 5.5z"/></svg>
+          <svg class="v" width="14" height="36" viewBox="0 0 14 36" aria-hidden="true"><line class="arrow" x1="7" y1="2" x2="7" y2="26"/><path class="arrow-head" d="M1.5 24 7 34l5.5-10z"/></svg>
+          <span><span lang="zh-Hant">即時推播<br>與控制指令</span><span lang="en">Live push<br>and commands</span></span>
+        </div>
+
+        <section class="arch-col" aria-labelledby="archOut">
+          <h3 class="arch-h" id="archOut"><span lang="zh-Hant">結果送到</span><span lang="en">Results go to</span></h3>
+          <ul class="outs">
+            <li><svg class="ic" aria-hidden="true"><use href="#i-chart"></use></svg><b><span lang="zh-Hant">網頁儀表板</span><span lang="en">Web dashboard</span></b><span><span lang="zh-Hant">團隊看全部長者，家人只看自家長者</span><span lang="en">The team sees every elder; families see only their own</span></span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg><b><span lang="zh-Hant">家人通知</span><span lang="en">Family alerts</span></b><span><span lang="zh-Hant">App 與 LINE 推播，簡訊備援</span><span lang="en">App and LINE alerts, with SMS backup</span></span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-watch"></use></svg><b><span lang="zh-Hant">手錶震動</span><span lang="en">Watch vibration</span></b><span><span lang="zh-Hant">提醒長者補水、休息</span><span lang="en">Nudges the elder to drink and rest</span></span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-ac"></use></svg><b><span lang="zh-Hant">冷氣控制</span><span lang="en">AC control</span></b><span><span lang="zh-Hant">指令送回房間節點的紅外線遙控器</span><span lang="en">Commands go back to the room node’s IR remote</span></span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-nav"></use></svg><b><span lang="zh-Hant">避暑導航</span><span lang="en">Cooling-spot directions</span></b><span><span lang="zh-Hant">人在戶外時，找最近的避暑地點</span><span lang="en">The nearest cooling spot when outdoors</span></span></li>
+          </ul>
+        </section>
+      </div>
+      <figcaption id="archCap"><span lang="zh-Hant">房間節點與手錶走兩條不同的路，只在伺服器裡會合。伺服器依設備身分判斷資料屬於哪位長者，之後的每一步都只在那位長者的通道裡進行。</span><span lang="en">Room nodes and the watch take separate roads and meet only inside the server. The server uses each device’s identity to decide whose data it is, and every later step stays inside that elder’s own lane.</span></figcaption>
+    </figure>
+
+    <div class="arch-notes">
+      <div class="points">
+        <div class="point">
+          <h3><span lang="zh-Hant">斷網也不漏資料</span><span lang="en">Nothing lost when Wi‑Fi drops</span></h3>
+          <p lang="zh-Hant">每筆資料先寫進樹莓派本機，最多保存 7 天。恢復連線後依原始時間補傳，過去的時間不會再觸發舊警報。</p>
+          <p lang="en">Every reading is saved on the Pi first and kept for up to 7 days. After reconnecting, it’s replayed with its original timestamp, and past minutes never set off stale alerts.</p>
+        </div>
+        <div class="point">
+          <h3><span lang="zh-Hant">設備只能代表自己</span><span lang="en">Each device speaks only for itself</span></h3>
+          <p lang="zh-Hant">每台樹莓派與每支手錶都有自己的憑證。伺服器用登記資料確認它屬於哪位長者，對不上的資料直接拒收。</p>
+          <p lang="en">Every Pi and watch has its own credential. The server checks the registry to confirm which elder it belongs to and rejects anything that doesn’t match.</p>
+        </div>
+        <div class="point">
+          <h3><span lang="zh-Hant">加一位長者，不用改程式</span><span lang="en">A new elder needs no new code</span></h3>
+          <p lang="zh-Hant">新增長者、房間或感測器都只是登記一筆資料；手錶壞了，重新配對一支就好。</p>
+          <p lang="en">Adding an elder, a room or a sensor is one registry entry. If a watch breaks, pair a new one.</p>
+        </div>
+      </div>
+      <figure class="code">
+        <figcaption><span class="mono">hp.telemetry.v1</span><span><span lang="zh-Hant">每筆資料都帶著身分與時間</span><span lang="en">Every reading carries its identity and time</span></span></figcaption>
+<pre><code>{
+  <span class="k">"schema"</span>: <span class="s">"hp.telemetry.v1"</span>,
+  <span class="k">"client_id"</span>: <span class="s">"c-001"</span>,
+  <span class="k">"node_id"</span>: <span class="s">"pi-0007"</span>,
+  <span class="k">"seq"</span>: <span class="n">18342</span>,
+  <span class="k">"readings"</span>: [{
+    <span class="k">"sensor_id"</span>: <span class="s">"pi-0007.s01"</span>,
+    <span class="k">"metric"</span>: <span class="s">"temp_c"</span>,
+    <span class="k">"ts"</span>: <span class="s">"2027-07-14T05:30:00Z"</span>,
+    <span class="k">"value"</span>: <span class="n">31.4</span>,
+    <span class="k">"quality"</span>: <span class="s">"ok"</span>
+  }]
+}</code></pre>
+      </figure>
+    </div>
+
+    <div class="stack">
+      <span class="stack-k"><span lang="zh-Hant">規劃中的技術</span><span lang="en">Planned stack</span></span>
+      <span class="chip">Raspberry Pi Zero 2 W</span>
+      <span class="chip"><span lang="zh-Hant">SHT4x 溫濕度</span><span lang="en">SHT4x temp &amp; humidity</span></span>
+      <span class="chip"><span lang="zh-Hant">毫米波人體存在</span><span lang="en">mmWave presence</span></span>
+      <span class="chip">MQTT · Mosquitto</span>
+      <span class="chip">Python · FastAPI</span>
+      <span class="chip">PostgreSQL + TimescaleDB</span>
+      <span class="chip">Redis</span>
+      <span class="chip"><span lang="zh-Hant">React 儀表板</span><span lang="en">React dashboard</span></span>
+      <span class="chip">Docker Compose</span>
+      <span class="chip">Grafana</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRIVACY ================= -->
+<section class="section band" id="privacy">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow"><span lang="zh-Hant">隱私與安全</span><span lang="en">Privacy &amp; safety</span></p>
+      <h2><span lang="zh-Hant">先同意，才收集</span><span lang="en">Consent comes first</span></h2>
+      <p class="lead" lang="zh-Hant">心率與位置都是敏感的個人資料。系統比照《個人資料保護法》的敏感資料標準處理：每個設備只能代表自己，每個家庭只看得到自己的長者。</p>
+      <p class="lead" lang="en">Heart rate and location are sensitive personal data, and the system handles them to the standard for sensitive data under Taiwan’s Personal Data Protection Act. Each device can speak only for itself, and each family sees only its own elder.</p>
+    </div>
+    <div class="pv-grid">
+      <article class="pv">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-pen"></use></svg><span lang="zh-Hant">同意後才啟用</span><span lang="en">Nothing before consent</span></h3>
+        <p lang="zh-Hant">長者與家人簽署同意書後才開始收集。生理資料、位置與冷氣控制分開同意，任何一項都能撤回。</p>
+        <p lang="en">Collection starts only after the elder and family sign consent. Physiology, location and AC control are agreed to separately, and any of them can be withdrawn.</p>
+      </article>
+      <article class="pv">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-ac"></use></svg><span lang="zh-Hant">冷氣連動隨時可關</span><span lang="en">AC control can be switched off</span></h3>
+        <p lang="zh-Hant">自動開冷氣可能和長者的省電習慣衝突，所以這項功能隨時可以關閉。</p>
+        <p lang="en">Automatic AC can clash with an elder’s habit of saving power, so it can be switched off at any time.</p>
+      </article>
+      <article class="pv">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-pin"></use></svg><span lang="zh-Hant">位置平時保持模糊</span><span lang="en">Location stays coarse</span></h3>
+        <p lang="zh-Hant">平時只保留大略位置；只有在中度以上的風險事件中，才顯示精確位置。</p>
+        <p lang="en">Location is kept coarse day to day and shown precisely only during a moderate-or-higher risk event.</p>
+      </article>
+      <article class="pv">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-eye"></use></svg><span lang="zh-Hant">只看得到自家長者</span><span lang="en">Families see only their own</span></h3>
+        <p lang="zh-Hant">每個家庭帳號只能看見自家長者的資料，每一次查看與操作都會留下紀錄。</p>
+        <p lang="en">Each family account sees only its own elder’s data, and every view and command is logged.</p>
+      </article>
+      <article class="pv">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg><span lang="zh-Hant">由人做最後決定</span><span lang="en">People make the call</span></h3>
+        <p lang="zh-Hant">AI 負責提醒與通知；要不要撥打 119，由家人決定。</p>
+        <p lang="en">The AI informs and alerts. Whether to call 119 is the family’s decision.</p>
+      </article>
+      <article class="pv">
+        <h3><svg class="ic" aria-hidden="true"><use href="#i-heart"></use></svg><span lang="zh-Hant">輔助照護，不做診斷</span><span lang="en">Support, not diagnosis</span></h3>
+        <p lang="zh-Hant">本系統不是醫療器材，也不做診斷。手錶量到的皮膚溫度不等於核心體溫。</p>
+        <p lang="en">The system is not a medical device and does not diagnose. Skin temperature from a watch is not core body temperature.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ROADMAP ================= -->
+<section class="section" id="roadmap">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow"><span lang="zh-Hant">開發進度</span><span lang="en">Roadmap</span></p>
+      <h2><span lang="zh-Hant">16 週，從規格到試辦</span><span lang="en">Sixteen weeks from spec to pilot</span></h2>
+      <p class="lead" lang="zh-Hant">九個階段、五道檢核關卡。第 12 週的 G3 是競賽展示目標：一位真實長者的資料從頭到尾跑完，並在儀表板上觸發即時警示。</p>
+      <p class="lead" lang="en">Nine phases and five checkpoint gates. Gate G3 in week 12 is the competition demo target: one real elder’s data flows end to end and triggers a live alert on the dashboard.</p>
+    </div>
+
+    <ol class="gantt">
+      <li class="g-scale" aria-hidden="true"><span class="g-spacer"></span><div class="g-weeks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span></div></li>
+      <li class="g-row is-now">
+        <div class="g-label"><span class="g-n">0</span><span class="g-name"><span lang="zh-Hant">決策與資料規格</span><span lang="en">Decisions &amp; data contract</span></span><span class="now-tag"><span lang="zh-Hant">目前</span><span lang="en">Now</span></span><span class="g-wk"><span lang="zh-Hant">第 1 週</span><span lang="en">Week 1</span></span></div>
+        <div class="g-track" aria-hidden="true"><span class="g-bar" style="--s:1;--len:1"></span></div>
+      </li>
+      <li class="g-row">
+        <div class="g-label"><span class="g-n">1</span><span class="g-name"><span lang="zh-Hant">伺服器基礎</span><span lang="en">Server foundation</span></span><span class="g-tag">G1</span><span class="g-wk"><span lang="zh-Hant">第 2–3 週</span><span lang="en">Weeks 2–3</span></span></div>
+        <div class="g-track" aria-hidden="true"><span class="g-bar" style="--s:2;--len:2"></span><span class="g-gate" style="--e:3"></span></div>
+      </li>
+      <li class="g-row">
+        <div class="g-label"><span class="g-n">2</span><span class="g-name"><span lang="zh-Hant">樹莓派感測節點</span><span lang="en">Raspberry Pi node</span></span><span class="g-wk"><span lang="zh-Hant">第 3–6 週</span><span lang="en">Weeks 3–6</span></span></div>
+        <div class="g-track" aria-hidden="true"><span class="g-bar" style="--s:3;--len:4"></span></div>
+      </li>
+      <li class="g-row">
+        <div class="g-label"><span class="g-n">3</span><span class="g-name"><span lang="zh-Hant">智慧手錶串接</span><span lang="en">Smartwatch integration</span></span><span class="g-wk"><span lang="zh-Hant">第 3–6 週</span><span lang="en">Weeks 3–6</span></span></div>
+        <div class="g-track" aria-hidden="true"><span class="g-bar" style="--s:3;--len:4"></span></div>
+      </li>
+      <li class="g-row">
+        <div class="g-label"><span class="g-n">4</span><span class="g-name"><span lang="zh-Hant">資料合併與同步</span><span lang="en">Fusion &amp; sync</span></span><span class="g-tag">G2</span><span class="g-wk"><span lang="zh-Hant">第 7–8 週</span><span lang="en">Weeks 7–8</span></span></div>
+        <div class="g-track" aria-hidden="true"><span class="g-bar" style="--s:7;--len:2"></span><span class="g-gate" style="--e:8"></span></div>
+      </li>
+      <li class="g-row">
+        <div class="g-label"><span class="g-n">5</span><span class="g-name"><span lang="zh-Hant">風險引擎與外部資料</span><span lang="en">Risk engine &amp; context</span></span><span class="g-wk"><span lang="zh-Hant">第 8–10 週</span><span lang="en">Weeks 8–10</span></span></div>
+        <div class="g-track" aria-hidden="true"><span class="g-bar" style="--s:8;--len:3"></span></div>
+      </li>
+      <li class="g-row">
+        <div class="g-label"><span class="g-n">6</span><span class="g-name"><span lang="zh-Hant">儀表板、通知與冷氣</span><span lang="en">Dashboard, alerts &amp; AC</span></span><span class="g-tag demo">G3</span><span class="g-wk"><span lang="zh-Hant">第 9–12 週</span><span lang="en">Weeks 9–12</span></span></div>
+        <div class="g-track" aria-hidden="true"><span class="g-bar" style="--s:9;--len:4"></span><span class="g-gate demo" style="--e:12"></span></div>
+      </li>
+      <li class="g-row">
+        <div class="g-label"><span class="g-n">7</span><span class="g-name"><span lang="zh-Hant">多位長者與系統強化</span><span lang="en">Multi-client &amp; hardening</span></span><span class="g-tag">G4</span><span class="g-wk"><span lang="zh-Hant">第 12–14 週</span><span lang="en">Weeks 12–14</span></span></div>
+        <div class="g-track" aria-hidden="true"><span class="g-bar" style="--s:12;--len:3"></span><span class="g-gate" style="--e:14"></span></div>
+      </li>
+      <li class="g-row">
+        <div class="g-label"><span class="g-n">8</span><span class="g-name"><span lang="zh-Hant">試辦準備</span><span lang="en">Pilot readiness</span></span><span class="g-tag">G5</span><span class="g-wk"><span lang="zh-Hant">第 14–16 週</span><span lang="en">Weeks 14–16</span></span></div>
+        <div class="g-track" aria-hidden="true"><span class="g-bar" style="--s:14;--len:3"></span><span class="g-gate" style="--e:16"></span></div>
+      </li>
+    </ol>
+    <p class="after-note"><span lang="zh-Hant">第 16 週之後：夏季試辦，20 位長者。階段 2 與 3 同時進行，因為樹莓派與手錶是兩條獨立的資料路線。</span><span lang="en">After week 16: the summer pilot with 20 elders. Phases 2 and 3 run side by side because the Pi and the watch are independent data roads.</span></p>
+
+    <ol class="gates">
+      <li class="gate">
+        <div class="gate-k"><b>G1</b><span><span lang="zh-Hant">第 3 週</span><span lang="en">Week 3</span></span></div>
+        <p lang="zh-Hant">模擬資料能正確標記長者、節點、感測器與時間；標錯長者的資料會被拒收。</p>
+        <p lang="en">Simulated data is stored with the right elder, node, sensor and time, and data labelled with the wrong elder is rejected.</p>
+      </li>
+      <li class="gate">
+        <div class="gate-k"><b>G2</b><span><span lang="zh-Hant">第 8 週</span><span lang="en">Week 8</span></span></div>
+        <p lang="zh-Hant">一個真實測試家庭跑完一整天，合併後的時間軸與手寫活動紀錄相符。</p>
+        <p lang="en">One real test home runs a full day, and its combined timeline matches a hand-written activity log.</p>
+      </li>
+      <li class="gate demo">
+        <div class="gate-k"><b>G3</b><span><span lang="zh-Hant">第 12 週</span><span lang="en">Week 12</span></span></div>
+        <span class="demo-k"><span lang="zh-Hant">競賽展示目標</span><span lang="en">Competition demo target</span></span>
+        <p lang="zh-Hant">現場加熱測試臥室：儀表板從輕度升到中度，家人手機收到警示，冷氣自動開啟。</p>
+        <p lang="en">Live demo: warming the test bedroom moves the dashboard from mild to moderate, the family’s phone gets the alert and the AC turns on.</p>
+      </li>
+      <li class="gate">
+        <div class="gate-k"><b>G4</b><span><span lang="zh-Hant">第 14 週</span><span lang="en">Week 14</span></span></div>
+        <p lang="zh-Hant">20 位模擬長者加上 2 個真實家庭連續運作 7 天，不同長者的資料完全沒有互相外洩。</p>
+        <p lang="en">20 simulated elders plus 2 real homes run for 7 days, with no data leaking between elders.</p>
+      </li>
+      <li class="gate">
+        <div class="gate-k"><b>G5</b><span><span lang="zh-Hant">第 16 週</span><span lang="en">Week 16</span></span></div>
+        <p lang="zh-Hant">通過試辦準備檢核，團隊簽署開始試辦。</p>
+        <p lang="en">The pilot readiness checklist passes and the team signs off on going ahead.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= PILOT ================= -->
+<section class="section band" id="pilot">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow"><span lang="zh-Hant">試辦與評估</span><span lang="en">Pilot</span></p>
+      <h2><span lang="zh-Hant">20 位長者，一個夏天</span><span lang="en">Twenty elders, one summer</span></h2>
+      <p class="lead" lang="zh-Hant">試辦用三項指標檢驗成效。我們也會清楚說明限制：一個夏天裡真正的熱傷害事件可能不多，所以每一條規則都同時用情境重播測試驗證。</p>
+      <p class="lead" lang="en">Three measures test whether it works. We are also upfront about the limits: one summer may bring few real heat events, so every rule is also checked with scripted scenario replays.</p>
+    </div>
+    <div class="metrics">
+      <article class="metric">
+        <h3><span lang="zh-Hant">風險判斷準確度</span><span lang="en">Accuracy of risk calls</span></h3>
+        <p lang="zh-Hant">每一次中度以上的事件都由護理顧問審查是否合理，並比對家人回報、系統卻漏掉的事件。</p>
+        <p lang="en">Our nursing advisor reviews every moderate-or-higher event, and we check for events families report that the system missed.</p>
+        <p class="measure"><b><span lang="zh-Hant">衡量方式</span><span lang="en">MEASURED AS</span></b><span><span lang="zh-Hant">中度以上警示的精確率與召回率</span><span lang="en">Precision and recall of moderate-or-higher alerts</span></span></p>
+      </article>
+      <article class="metric">
+        <h3><span lang="zh-Hant">家人即時收到</span><span lang="en">Family alerted in time</span></h3>
+        <p lang="zh-Hant">從中度風險觸發，到家人按下確認的時間。</p>
+        <p lang="en">The time from a moderate-risk trigger to a family member acknowledging it.</p>
+        <p class="measure"><b><span lang="zh-Hant">衡量方式</span><span lang="en">MEASURED AS</span></b><span><span lang="zh-Hant">中位數與第 90 百分位數</span><span lang="en">Median and 90th percentile</span></span></p>
+      </article>
+      <article class="metric">
+        <h3><span lang="zh-Hant">長者願意使用</span><span lang="en">Elders keep using it</span></h3>
+        <p lang="zh-Hant">每天配戴手錶的時數，以及夏季結束時的使用問卷。</p>
+        <p lang="en">Daily watch wear time and an end-of-summer survey.</p>
+        <p class="measure"><b><span lang="zh-Hant">衡量方式</span><span lang="en">MEASURED AS</span></b><span><span lang="zh-Hant">每日配戴時數與問卷分數（1–5 分）</span><span lang="en">Daily wear time and survey score (1–5)</span></span></p>
+      </article>
+    </div>
+
+    <h3 class="stages-h"><span lang="zh-Hant">AI 怎麼一步步變聰明</span><span lang="en">How the AI grows</span></h3>
+    <ol class="stages">
+      <li class="stage">
+        <div class="stage-k"><b>1</b><span class="stage-when"><span lang="zh-Hant">試辦期間使用</span><span lang="en">Used in the pilot</span></span></div>
+        <h3><span lang="zh-Hant">個人化基準規則</span><span lang="en">Rules on personal baselines</span></h3>
+        <p lang="zh-Hant">不需要訓練資料，每一個判斷都說得出原因。</p>
+        <p lang="en">Needs no training data, and every decision states its reasons.</p>
+      </li>
+      <li class="stage">
+        <div class="stage-k"><b>2</b><span class="stage-when"><span lang="zh-Hant">試辦期間在背景試跑</span><span lang="en">Runs in the background during the pilot</span></span></div>
+        <h3><span lang="zh-Hant">個人異常偵測</span><span lang="en">Personal anomaly model</span></h3>
+        <p lang="zh-Hant">學習在某個室溫、活動與時段下，這個人的心率通常是多少，並標出差距過大的時刻。</p>
+        <p lang="en">Learns what this person’s heart rate usually is for a given room temperature, activity and time of day, and flags large gaps.</p>
+      </li>
+      <li class="stage">
+        <div class="stage-k"><b>3</b><span class="stage-when"><span lang="zh-Hant">累積足夠事件之後</span><span lang="en">Once enough events are labelled</span></span></div>
+        <h3><span lang="zh-Hant">監督式風險模型</span><span lang="en">Supervised risk model</span></h3>
+        <p lang="zh-Hant">需要大量標註過的熱傷害事件，等資料足夠才會啟用。</p>
+        <p lang="en">Needs many labelled heat episodes, so it waits until the data exists.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= FUTURE ================= -->
+<section class="section" id="future">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow"><span lang="zh-Hant">未來展望</span><span lang="en">What’s next</span></p>
+      <h2><span lang="zh-Hant">從一個家，到一座城市</span><span lang="en">From one home to a whole city</span></h2>
+      <p class="lead" lang="zh-Hant">同一套架構，只要加入新的資料與新的服務對象，就能擴大照顧範圍，不必重新打造。</p>
+      <p class="lead" lang="en">The same architecture grows by adding new data and new groups of people, with no rebuild.</p>
+    </div>
+    <div class="future">
+      <article class="fut">
+        <h3><span lang="zh-Hant">社區避暑地圖</span><span lang="en">Community cooling map</span></h3>
+        <p lang="zh-Hant">整合里辦公處、圖書館、活動中心等避暑地點，並找出風險最高的里。</p>
+        <p lang="en">Map cooling spots such as neighbourhood offices, libraries and activity centres, and find the neighbourhoods at highest risk.</p>
+      </article>
+      <article class="fut">
+        <h3><span lang="zh-Hant">照顧更多族群</span><span lang="en">More people at risk</span></h3>
+        <p lang="zh-Hant">戶外工作者、慢性病患者，以及家中沒有冷氣的低收入家庭。</p>
+        <p lang="en">Outdoor workers, people with chronic illness, and low-income homes without air conditioning.</p>
+      </article>
+      <article class="fut">
+        <h3><span lang="zh-Hant">街區熱地圖</span><span lang="en">Street-level heat map</span></h3>
+        <p lang="zh-Hant">匿名彙整各家的戶外感測資料，回饋成街區尺度的熱地圖。</p>
+        <p lang="en">Anonymized outdoor readings from many homes become a street-by-street heat map.</p>
+      </article>
+      <article class="fut">
+        <h3><span lang="zh-Hant">城市氣候調適</span><span lang="en">City climate adaptation</span></h3>
+        <p lang="zh-Hant">成為城市氣候調適系統的一部分，並與社福單位連結。</p>
+        <p lang="en">Become part of the city’s climate-adaptation system, linked with social-welfare services.</p>
+      </article>
+    </div>
+    <div class="sdgs">
+      <span class="sdg"><b>SDG 3</b><span lang="zh-Hant">健康與福祉</span><span lang="en">Good health and well-being</span></span>
+      <span class="sdg"><b>SDG 11</b><span lang="zh-Hant">永續城市與社區</span><span lang="en">Sustainable cities and communities</span></span>
+      <span class="sdg"><b>SDG 13</b><span lang="zh-Hant">氣候行動</span><span lang="en">Climate action</span></span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div class="footer-meta">
+      <a class="brand" href="#top">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect class="bm-bg" width="32" height="32" rx="9"/><path class="bm-house" d="M7 15.5 16 8l9 7.5V25H7z"/><rect class="bm-1" x="10.5" y="19" width="2.6" height="3.5" rx=".8"/><rect class="bm-2" x="14.7" y="17" width="2.6" height="5.5" rx=".8"/><rect class="bm-3" x="18.9" y="15" width="2.6" height="7.5" rx=".8"/></svg>
+        <span class="brand-text" lang="zh-TW">AI守護高齡者</span>
+      </a>
+      <p><span lang="zh-TW">AI永續新世代 · 普台科技競賽</span> · <span lang="zh-Hant">三人學生團隊</span><span lang="en">a three-person student team</span></p>
+      <p class="fine"><span lang="zh-Hant">最後更新：2026 年 10 月</span><span lang="en">Last updated October 2026</span></p>
+    </div>
+    <div class="footer-note">
+      <p><strong><span lang="zh-Hant">本系統為照護輔助工具，不是醫療器材，也不提供診斷。發生緊急狀況請直接撥打 119。</span><span lang="en">This system supports care. It is not a medical device and does not diagnose. In an emergency, call 119 directly.</span></strong></p>
+      <p><span lang="zh-Hant">英文字體使用 Atkinson Hyperlegible，這是一款專為低視力讀者設計的字體；中文字體為 Noto Sans TC。</span><span lang="en">Set in Atkinson Hyperlegible, a typeface designed for readers with low vision, with Noto Sans TC for Chinese.</span></p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+'use strict';
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+var root = document.documentElement;
+function lang() { return root.getAttribute('data-lang') === 'en' ? 'en' : 'zh'; }
+function tr(o) { if (o == null) return ''; if (typeof o === 'string') return o; return o[lang()] != null ? o[lang()] : o.zh; }
+function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+
+/* ---------- shared strings ---------- */
+var LV = [{zh:'無風險',en:'No risk'},{zh:'輕度',en:'Mild'},{zh:'中度',en:'Moderate'},{zh:'高度',en:'High'}];
+var LVSUB = [null,{zh:'自我降溫',en:'Self-cooling'},{zh:'環境降溫',en:'Environmental cooling'},{zh:'第三方介入',en:'Third-party help'}];
+var T = {
+  temp:{zh:'溫度',en:'Temperature'}, hr:{zh:'心率',en:'Heart rate'}, state:{zh:'狀態',en:'Activity'}, ac:{zh:'冷氣',en:'AC'},
+  base:{zh:'基準',en:'Baseline'}, sigs:{zh:'判斷訊號',en:'Signals'}, say:{zh:'系統判斷',en:'What the system concludes'},
+  acts:{zh:'這一步的行動',en:'Actions at this step'}, noAct:{zh:'不採取行動，持續監測。',en:'No action yet. Monitoring continues.'},
+  yes:{zh:'是',en:'Yes'}, no:{zh:'否',en:'No'},
+  prev:{zh:'上一步',en:'Back'}, next:{zh:'下一步',en:'Next'}, nextScn:{zh:'下一個情境',en:'Next scenario'},
+  acOn:{zh:'開啟',en:'On'}, acOff:{zh:'關閉',en:'Off'}, outdoors:{zh:'人在戶外',en:'Outdoors'},
+  sleepBase:{zh:'睡眠基準',en:'Sleep baseline'}
+};
+var SIG = {
+  E:{t:{zh:'環境偏熱',en:'Hot surroundings'}, s:{zh:'室內 ≥ 28 °C／戶外 ≥ 30 °C',en:'Indoors ≥ 28 °C / outdoors ≥ 30 °C'}},
+  P:{t:{zh:'心率持續偏高',en:'Heart rate stays high'}, s:{zh:'≥ 基準 +15 bpm 達 10 分鐘',en:'≥ baseline +15 bpm for 10 min'}},
+  G:{t:{zh:'正在活動',en:'Active'}, s:{zh:'走路或運動中，先不判斷',en:'Walking or exercising, so hold off'}},
+  R:{t:{zh:'沒有回應',en:'No response'}, s:{zh:'沒按「我沒事」，15 分鐘沒動',en:'No “I’m OK” tap, still for 15 min'}}
+};
+var STATE = {
+  sleep:{zh:'睡眠中',en:'Asleep'}, rest:{zh:'休息',en:'Resting'}, walk:{zh:'走路',en:'Walking'},
+  still:{zh:'15 分鐘沒動',en:'Still for 15 min'}, spot:{zh:'在避暑點休息',en:'At a cooling spot'}
+};
+function A(ic, zh, en) { return { ic: ic, t: { zh: zh, en: en } }; }
+
+/* ---------- scenario replays (rule v1, illustrative numbers) ---------- */
+var ORDER = ['night', 'walk', 'alone'];
+var SCN = {
+  night: {
+    intro:{zh:'獨居的長者在悶熱的臥室裡睡著了。睡眠心率基準 58 bpm。',en:'An elder who lives alone falls asleep in a stuffy bedroom. Sleeping heart-rate baseline: 58 bpm.'},
+    base:58, tl:{zh:'臥室',en:'Bedroom'}, start:2,
+    steps:[
+      {t:'01:30', title:{zh:'房間變熱',en:'Room heating up'}, temp:30.6, hr:62, st:'sleep', ac:'off', sig:'E', lv:0,
+       say:{zh:'臥室已超過 28 °C，但心率還在睡眠基準附近。環境偏熱、身體還沒有反應，系統持續觀察。',en:'The bedroom is above 28 °C, but heart rate is still near the sleeping baseline. The room is hot and the body hasn’t reacted yet, so the system keeps watching.'}, acts:[]},
+      {t:'02:00', title:{zh:'開始計時',en:'Clock starts'}, temp:31.2, hr:73, st:'sleep', ac:'off', sig:'E', lv:0,
+       say:{zh:'心率剛好比睡眠基準高 15 bpm。要持續 10 分鐘才算數，系統開始計時。',en:'Heart rate has just reached 15 bpm above the sleeping baseline. It has to stay there for 10 minutes to count, so the clock starts.'}, acts:[]},
+      {t:'02:10', title:{zh:'輕度風險',en:'Mild risk'}, temp:31.4, hr:76, st:'sleep', ac:'on', sig:'EP', lv:1,
+       say:{zh:'心率高出基準 18 bpm，已經持續 10 分鐘，而且人在睡覺，不是運動造成的。判定為輕度風險。',en:'Heart rate is 18 bpm above baseline and has stayed high for 10 minutes while asleep, so exercise can’t explain it. Mild risk.'},
+       acts:[A('watch','手錶輕震，提醒補充水分','The watch vibrates with a reminder to drink water'),
+             A('ac','正在睡覺，臥室冷氣自動開啟（由臥室節點的紅外線遙控器執行）','Because they’re asleep, the bedroom AC turns on through the node’s IR remote'),
+             A('chart','儀表板記錄這次事件與原因','The dashboard logs the episode and its reasons')]},
+      {t:'02:25', title:{zh:'恢復觀察',en:'Watching recovery'}, temp:29.9, hr:72, st:'sleep', ac:'on', sig:'E', lv:1,
+       say:{zh:'冷氣開始降溫，心率回到門檻以下。要連續 15 分鐘正常，才會降回無風險。',en:'The AC is cooling the room and heart rate is back under the threshold. It has to stay normal for 15 minutes in a row before the level drops.'},
+       acts:[], none:{zh:'觀察恢復中，暫不升級。',en:'Watching recovery. No escalation.'}},
+      {t:'02:38', title:{zh:'恢復正常',en:'Back to normal'}, temp:28.7, hr:67, st:'sleep', ac:'on', sig:'E', lv:0,
+       say:{zh:'心率已連續 15 分鐘正常，風險降回無，事件結束。輕度風險不會通知家人，家人可以一覺到天亮，早上再到儀表板看紀錄。',en:'Heart rate has been normal for 15 minutes, so the risk drops to none and the episode closes. Mild risk doesn’t alert the family, so they sleep through and can read the record on the dashboard in the morning.'},
+       acts:[A('check','事件結束，冷氣繼續運轉','Episode closed; the AC keeps running')]}
+    ]
+  },
+  walk: {
+    intro:{zh:'長者頂著午後的大太陽走路去市場。清醒休息時的心率基準 70 bpm。',en:'An elder walks to the market under the afternoon sun. Resting heart-rate baseline: 70 bpm.'},
+    base:70, tl:{zh:'戶外 · 氣象署測站',en:'Outdoors · CWA station'}, start:0,
+    steps:[
+      {t:'14:00', title:{zh:'走路中',en:'Walking'}, temp:33.0, hr:92, st:'walk', ac:'na', sig:'EPG', lv:0,
+       say:{zh:'戶外 33 °C，心率比基準高 22 bpm。但長者正在走路，運動時心率上升是正常的，不發出警示。',en:'It’s 33 °C outside and heart rate is 22 bpm above baseline. The elder is walking, and a raised heart rate during exercise is normal, so there’s no alert.'}, acts:[]},
+      {t:'14:10', title:{zh:'停下休息',en:'Stops to rest'}, temp:33.0, hr:91, st:'rest', ac:'na', sig:'EPG', lv:0,
+       say:{zh:'在公車站坐下休息。剛活動完的 10 分鐘內仍視為正常，10 分鐘後再重新判斷。',en:'They sit down at a bus stop. The first 10 minutes after activity still count as normal, and the system re-checks after that.'}, acts:[]},
+      {t:'14:20', title:{zh:'輕度風險',en:'Mild risk'}, temp:33.2, hr:90, st:'rest', ac:'na', sig:'EP', lv:1,
+       say:{zh:'休息 10 分鐘後，心率仍高出基準 20 bpm，外面又很熱。判定為輕度風險。',en:'After 10 minutes of rest, heart rate is still 20 bpm above baseline in the heat. Mild risk.'},
+       acts:[A('watch','手錶震動提醒','The watch vibrates'),
+             A('drop','提醒到陰涼處休息、補充水分','A prompt to rest in the shade and drink water')]},
+      {t:'14:50', title:{zh:'中度風險',en:'Moderate risk'}, temp:33.5, hr:89, st:'rest', ac:'na', sig:'EP', lv:2,
+       say:{zh:'輕度處理 30 分鐘後仍沒有改善，升為中度風險。',en:'Thirty minutes after the mild actions, nothing has improved. Moderate risk.'},
+       acts:[A('bell','通知家人，並說明原因','Family is alerted, with the reasons'),
+             A('nav','人在戶外，導航到最近的避暑地點：社區活動中心，步行 4 分鐘','Outdoors, so directions to the nearest cooling spot: a community centre, 4 minutes on foot')]},
+      {t:'15:30', title:{zh:'恢復正常',en:'Back to normal'}, temp:33.0, hr:76, st:'spot', ac:'na', sig:'E', lv:0,
+       say:{zh:'在有冷氣的活動中心休息後，心率慢慢回落。每連續 15 分鐘正常就降一級：15:15 降為輕度，15:30 回到無風險。',en:'Resting in the air-conditioned community centre, heart rate settles. Each 15 normal minutes drops one level: mild at 15:15, none at 15:30.'},
+       acts:[A('check','事件結束，家人的 App 顯示已恢復','Episode closed; the family’s app shows it as resolved')]}
+    ]
+  },
+  alone: {
+    intro:{zh:'為了省電，獨居的長者白天不開冷氣。清醒休息時的心率基準 70 bpm。',en:'To save on electricity, an elder who lives alone keeps the AC off during the day. Resting heart-rate baseline: 70 bpm.'},
+    base:70, tl:{zh:'客廳',en:'Living room'}, start:0,
+    steps:[
+      {t:'13:00', title:{zh:'冷氣沒開',en:'AC off'}, temp:32.4, hr:78, st:'rest', ac:'off', sig:'E', lv:0,
+       say:{zh:'客廳 32.4 °C，冷氣沒開。心率略高，但還沒到門檻，系統持續觀察。',en:'The living room is 32.4 °C with the AC off. Heart rate is a little high but below the threshold, so the system keeps watching.'}, acts:[]},
+      {t:'13:20', title:{zh:'輕度風險',en:'Mild risk'}, temp:32.8, hr:86, st:'rest', ac:'off', sig:'EP', lv:1,
+       say:{zh:'心率高出基準 16 bpm，已經持續 10 分鐘，人在休息。判定為輕度風險。',en:'Heart rate has been 16 bpm above baseline for 10 minutes while resting. Mild risk.'},
+       acts:[A('watch','手錶震動提醒','The watch vibrates'),
+             A('drop','提醒喝水、休息','A prompt to drink water and rest')]},
+      {t:'13:50', title:{zh:'中度風險',en:'Moderate risk'}, temp:33.0, hr:90, st:'rest', ac:'on', sig:'EP', lv:2,
+       say:{zh:'輕度處理 30 分鐘後仍沒有改善，升為中度風險。',en:'Thirty minutes after the mild actions, nothing has improved. Moderate risk.'},
+       acts:[A('bell','通知第一聯絡人（女兒），並說明原因','Contact 1 (daughter) is alerted, with the reasons'),
+             A('ac','人在室內，客廳冷氣自動開啟','Indoors, so the living-room AC turns on'),
+             A('watch','手錶與手機跳出「我沒事」按鈕','The watch and phone show an “I’m OK” button')]},
+      {t:'13:55', title:{zh:'高度風險',en:'High risk'}, temp:32.2, hr:92, st:'still', ac:'on', sig:'EPR', lv:3,
+       say:{zh:'5 分鐘內沒有按「我沒事」，而且已經 15 分鐘沒有任何動作，可能是意識或行動力下降。升為高度風險。',en:'There’s been no tap on “I’m OK” for 5 minutes and no movement for 15 minutes, a possible sign of reduced alertness or mobility. High risk.'},
+       acts:[A('pin','傳送即時位置給家人','Live location is sent to family'),
+             A('eye','持續監測，不中斷','Continuous monitoring'),
+             A('bell','女兒 5 分鐘內沒有確認，改通知第二聯絡人，並以簡訊備援','The daughter hasn’t acknowledged in 5 minutes, so contact 2 is alerted, with an SMS backup'),
+             A('phone','家人的 App 出現「撥打 119」按鈕，由家人決定','A “Call 119” button appears in the family’s app. The family decides.')]},
+      {t:'14:05', title:{zh:'家人接手',en:'Family takes over'}, temp:31.0, hr:88, st:'rest', ac:'on', sig:'EP', lv:3,
+       say:{zh:'第二聯絡人（兒子）在 13:58 確認收到，請鄰居先過去查看，並決定撥打 119。系統持續監測，並記錄每一個步驟與時間。',en:'Contact 2 (son) acknowledged at 13:58, asked a neighbour to check in and decided to call 119. The system keeps monitoring and logs every step with its time.'},
+       acts:[A('check','每一則通知、每一個冷氣指令都有時間紀錄','Every alert and AC command is on record with its time')]}
+    ]
+  }
+};
+
+/* ---------- daily heat-index tiers (Ministry of Labor grading) ---------- */
+var HI_LV = [
+  {name:{zh:'低於提醒標準',en:'Below reminder level'}, msg:{zh:'今天熱指數不高，照常活動，記得補充水分。',en:'The heat index is low today. Go about your day and keep drinking water.'}},
+  {name:{zh:'輕度',en:'Mild'}, msg:{zh:'多補充水分，減少日曬。',en:'Drink more water and limit time in the sun.'}},
+  {name:{zh:'中度',en:'Moderate'}, msg:{zh:'避免中午外出，出門請規劃陰涼路線。',en:'Avoid going out at midday, and plan a shaded route.'}},
+  {name:{zh:'高度',en:'High'}, msg:{zh:'盡量不要外出，待在通風或有冷氣的室內。',en:'Better to stay in, in a ventilated or air-conditioned room.'}}
+];
+
+/* ---------- helpers ---------- */
+function icon(id) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + id + '"></use></svg>'; }
+var METER = '<svg class="meter" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="7" width="4" height="5" rx="1"/><rect x="6" y="4" width="4" height="8" rx="1"/><rect x="12" y="0" width="4" height="12" rx="1"/></svg>';
+function sign(n) { return (n >= 0 ? '+' : '−') + Math.abs(n); }
+
+/* monotone cubic interpolation (Fritsch–Carlson): smooth, never overshoots the data */
+function monotone(pts) {
+  var n = pts.length, xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+  var d = [], m = new Array(n), i;
+  for (i = 0; i < n - 1; i++) d[i] = (ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]);
+  m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+    var a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b;
+    if (s > 9) { var k = 3 / Math.sqrt(s); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; }
+  }
+  return function (t) {
+    if (t <= xs[0]) return ys[0];
+    if (t >= xs[n - 1]) return ys[n - 1];
+    var j = 0; while (t > xs[j + 1]) j++;
+    var h = xs[j + 1] - xs[j], u = (t - xs[j]) / h, u2 = u * u, u3 = u2 * u;
+    return (2 * u3 - 3 * u2 + 1) * ys[j] + (u3 - 2 * u2 + u) * h * m[j] + (-2 * u3 + 3 * u2) * ys[j + 1] + (u3 - u2) * h * m[j + 1];
+  };
+}
+
+/* ---------- hero: one night, minute by minute (illustrative) ---------- */
+var NIGHT = {
+  temp: [[0,29.2],[20,29.4],[40,29.7],[60,30.0],[80,30.4],[100,30.8],[120,31.2],[130,31.4],[140,30.4],[150,29.4],[160,28.5],[170,27.9],[180,27.4],[200,26.9],[220,26.7],[240,26.6]],
+  hr: [[0,57],[20,57],[40,58],[60,59],[80,61],[100,64.5],[110,68],[120,73],[125,75],[130,76],[135,75.4],[140,74],[145,72],[150,70.4],[160,66.5],[170,63],[180,60.5],[200,58.5],[220,57.5],[240,57]],
+  base: 58, band: [54, 62], thr: 73, envThr: 28, mild: [130, 158], acOn: 130, focus: 130,
+  events: [{ t: 120, n: 1, row: 'hr' }, { t: 130, n: 2, row: 'temp' }, { t: 158, n: 3, row: 'hr' }]
+};
+var tempAt = monotone(NIGHT.temp), hrAt = monotone(NIGHT.hr);
+function hhmm(t) { return ('0' + Math.floor(t / 60)).slice(-2) + ':' + ('0' + (t % 60)).slice(-2); }
+function nightLevel(t) { return t >= NIGHT.mild[0] && t < NIGHT.mild[1] ? 1 : 0; }
+var nightT = NIGHT.focus, sc = null, host = $('#nightChart');
+
+function drawNight() {
+  if (!host) return;
+  var W = Math.max(280, Math.round(host.clientWidth)), narrow = W < 460, en = lang() === 'en';
+  var ph = narrow ? 80 : 92, m = { l: narrow ? 30 : 38, r: 6 }, pw = W - m.l - m.r;
+  var yA0 = 22, yA1 = yA0 + ph, yB0 = yA1 + 34, yB1 = yB0 + ph;
+  var sh = 14, sR = yB1 + 16, sA = sR + sh + 8, axY = sA + sh + 17, H = axY + 5;
+  function x(t) { return m.l + (t / 240) * pw; }
+  function yT(v) { return yA1 - ((v - 26) / 6) * ph; }
+  function yH(v) { return yB1 - ((v - 48) / 32) * ph; }
+  function f(v) { return v.toFixed(1); }
+  function crisp(v) { return (Math.round(v) + 0.5).toFixed(1); }
+  function tw(str) { return Array.from(str).reduce(function (w, c) { return w + (/[⺀-￿]/.test(c) ? 10 : 6); }, 0); }
+  sc = { x: x, yT: yT, yH: yH, m: m, pw: pw };
+  var L = {
+    temp: en ? 'Bedroom temperature (°C)' : '臥室溫度（°C）', hr: en ? 'Heart rate (bpm)' : '心率（bpm）',
+    env: en ? 'Heat threshold 28' : '環境門檻 28', band: en ? 'Sleep baseline 58' : '睡眠基準 58', thr: en ? 'Baseline +15' : '基準 +15',
+    risk: en ? 'Risk' : '風險', ac: en ? 'AC' : '冷氣', mild: en ? 'Mild' : '輕度', on: en ? 'On' : '開啟'
+  };
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true" focusable="false">';
+  s += '<defs><clipPath id="ncWarn"><rect x="' + m.l + '" y="' + (yB0 - 6) + '" width="' + pw + '" height="' + f(yH(NIGHT.thr) - yB0 + 6) + '"/></clipPath></defs>';
+  s += '<text class="nc-title" x="0" y="' + (yA0 - 9) + '">' + L.temp + '</text><text class="nc-title" x="0" y="' + (yB0 - 9) + '">' + L.hr + '</text>';
+  for (var h = 0; h <= 4; h++) {
+    var X = crisp(x(h * 60));
+    s += '<line class="nc-hour" x1="' + X + '" x2="' + X + '" y1="' + yA0 + '" y2="' + yA1 + '"/><line class="nc-hour" x1="' + X + '" x2="' + X + '" y1="' + yB0 + '" y2="' + yB1 + '"/>';
+  }
+  [26, 30, 32].forEach(function (v) { var Y = crisp(yT(v)); s += '<line class="nc-grid" x1="' + m.l + '" x2="' + (m.l + pw) + '" y1="' + Y + '" y2="' + Y + '"/>'; });
+  [26, 28, 30, 32].forEach(function (v) { s += '<text class="nc-txt" x="' + (m.l - 6) + '" y="' + f(yT(v) + 4) + '" text-anchor="end">' + v + '</text>'; });
+  s += '<line class="nc-thr" x1="' + m.l + '" x2="' + (m.l + pw) + '" y1="' + crisp(yT(NIGHT.envThr)) + '" y2="' + crisp(yT(NIGHT.envThr)) + '"/>';
+  s += '<text class="nc-txt" x="' + (m.l + pw) + '" y="' + f(yT(NIGHT.envThr) - 5) + '" text-anchor="end">' + L.env + '</text>';
+  s += '<rect class="nc-band" x="' + m.l + '" y="' + f(yH(NIGHT.band[1])) + '" width="' + pw + '" height="' + f(yH(NIGHT.band[0]) - yH(NIGHT.band[1])) + '"/>';
+  [50, 60, 70, 80].forEach(function (v) {
+    var Y = crisp(yH(v));
+    s += '<line class="nc-grid" x1="' + m.l + '" x2="' + (m.l + pw) + '" y1="' + Y + '" y2="' + Y + '"/>';
+    s += '<text class="nc-txt" x="' + (m.l - 6) + '" y="' + f(yH(v) + 4) + '" text-anchor="end">' + v + '</text>';
+  });
+  s += '<text class="nc-txt" x="' + (m.l + 4) + '" y="' + f(yH(NIGHT.band[1]) - 5) + '">' + L.band + '</text>';
+  s += '<line class="nc-thr" x1="' + m.l + '" x2="' + (m.l + pw) + '" y1="' + crisp(yH(NIGHT.thr)) + '" y2="' + crisp(yH(NIGHT.thr)) + '"/>';
+  s += '<text class="nc-txt" x="' + (m.l + pw) + '" y="' + f(yH(NIGHT.thr) - 5) + '" text-anchor="end">' + L.thr + '</text>';
+  var tp = '', hp = '';
+  for (var t = 0; t <= 240; t++) {
+    tp += (t ? 'L' : 'M') + f(x(t)) + ' ' + f(yT(tempAt(t)));
+    hp += (t ? 'L' : 'M') + f(x(t)) + ' ' + f(yH(hrAt(t)));
+  }
+  s += '<path class="nc-area" d="' + tp + 'L' + f(x(240)) + ' ' + yA1 + 'L' + f(x(0)) + ' ' + yA1 + 'Z"/>';
+  s += '<path class="nc-line" d="' + tp + '"/><path class="nc-line" d="' + hp + '"/><path class="nc-line nc-warn" d="' + hp + '" clip-path="url(#ncWarn)"/>';
+  // risk and AC strips
+  var mx0 = x(NIGHT.mild[0]), mx1 = x(NIGHT.mild[1]), ax0 = x(NIGHT.acOn), ax1 = x(240);
+  s += '<text class="nc-txt" x="' + (m.l - 6) + '" y="' + (sR + sh - 3) + '" text-anchor="end">' + L.risk + '</text>';
+  s += '<rect class="nc-track" x="' + m.l + '" y="' + sR + '" width="' + pw + '" height="' + sh + '" rx="3"/>';
+  s += '<rect class="nc-mild" x="' + f(mx0) + '" y="' + sR + '" width="' + f(mx1 - mx0) + '" height="' + sh + '" rx="3"/>';
+  if (mx1 - mx0 >= tw(L.mild) + 8) s += '<text class="nc-in nc-in-warm" x="' + f((mx0 + mx1) / 2) + '" y="' + (sR + sh - 3.5) + '" text-anchor="middle">' + L.mild + '</text>';
+  s += '<text class="nc-txt" x="' + (m.l - 6) + '" y="' + (sA + sh - 3) + '" text-anchor="end">' + L.ac + '</text>';
+  s += '<rect class="nc-track" x="' + m.l + '" y="' + sA + '" width="' + pw + '" height="' + sh + '" rx="3"/>';
+  s += '<rect class="nc-ac" x="' + f(ax0) + '" y="' + sA + '" width="' + f(ax1 - ax0) + '" height="' + sh + '" rx="3"/>';
+  if (ax1 - ax0 >= tw(L.on) + 8) s += '<text class="nc-in nc-in-ac" x="' + f((ax0 + ax1) / 2) + '" y="' + (sA + sh - 3.5) + '" text-anchor="middle">' + L.on + '</text>';
+  s += '<line class="nc-event" x1="' + crisp(x(NIGHT.acOn)) + '" x2="' + crisp(x(NIGHT.acOn)) + '" y1="' + yA0 + '" y2="' + (sA + sh) + '"/>';
+  for (h = 0; h <= 4; h++) s += '<text class="nc-txt" x="' + f(x(h * 60)) + '" y="' + axY + '" text-anchor="' + (h === 0 ? 'start' : h === 4 ? 'end' : 'middle') + '">0' + h + ':00</text>';
+  // crosshair, then numbered event markers on top
+  s += '<g><line class="nc-cross" id="ncCrossLine" x1="0" x2="0" y1="' + yA0 + '" y2="' + (sA + sh) + '"/><circle class="nc-dot" id="ncDotT" r="4.5" cx="0" cy="0"/><circle class="nc-dot" id="ncDotH" r="4.5" cx="0" cy="0"/></g>';
+  NIGHT.events.forEach(function (e) {
+    var cx = x(e.t), cy = e.row === 'temp' ? yT(tempAt(e.t)) : yH(hrAt(e.t));
+    s += '<g class="nc-mark"><circle cx="' + f(cx) + '" cy="' + f(cy) + '" r="9"/><text x="' + f(cx) + '" y="' + f(cy + 4) + '" text-anchor="middle">' + e.n + '</text></g>';
+  });
+  host.innerHTML = s + '</svg>';
+}
+
+function setNight(t) {
+  nightT = t;
+  var temp = tempAt(t), hr = hrAt(t), lv = nightLevel(t), ac = t >= NIGHT.acOn;
+  $('#roTime').textContent = hhmm(t);
+  $('#roTemp').textContent = temp.toFixed(1);
+  $('#roHr').textContent = String(Math.round(hr));
+  $('#roHrSub').textContent = tr(T.sleepBase) + ' ' + sign(Math.round(hr) - NIGHT.base);
+  $('#roLevel').setAttribute('data-l', String(lv));
+  $('#roLevelT').textContent = tr(LV[lv]);
+  $('#roAc').textContent = tr(T.ac) + ' ' + tr(ac ? T.acOn : T.acOff);
+  if (!sc) return;
+  var X = sc.x(t).toFixed(1), el;
+  if ((el = $('#ncCrossLine'))) { el.setAttribute('x1', X); el.setAttribute('x2', X); }
+  if ((el = $('#ncDotT'))) { el.setAttribute('cx', X); el.setAttribute('cy', sc.yT(temp).toFixed(1)); }
+  if ((el = $('#ncDotH'))) { el.setAttribute('cx', X); el.setAttribute('cy', sc.yH(hr).toFixed(1)); }
+}
+
+function buildNightTable() {
+  var tb = $('#nightTable'); if (!tb) return;
+  var en = lang() === 'en', mins = [], t;
+  for (t = 0; t <= 240; t += 10) mins.push(t);
+  mins.push(NIGHT.mild[1]); mins.sort(function (a, b) { return a - b; });
+  var h = '<thead><tr><th scope="col">' + (en ? 'Time' : '時間') + '</th><th scope="col">' + (en ? 'Room °C' : '室溫 °C') + '</th><th scope="col">' + (en ? 'Heart rate' : '心率') + '</th><th scope="col">' + (en ? 'Risk' : '風險') + '</th><th scope="col">' + (en ? 'AC' : '冷氣') + '</th></tr></thead><tbody>';
+  mins.forEach(function (t) {
+    h += '<tr><td>' + hhmm(t) + '</td><td>' + tempAt(t).toFixed(1) + '</td><td>' + Math.round(hrAt(t)) + '</td><td>' + tr(LV[nightLevel(t)]) + '</td><td>' + tr(t >= NIGHT.acOn ? T.acOn : T.acOff) + '</td></tr>';
+  });
+  tb.innerHTML = h + '</tbody>';
+}
+
+if (host) {
+  host.addEventListener('pointermove', function (e) {
+    if (!sc) return;
+    var r = host.getBoundingClientRect();
+    setNight(clamp(Math.round(((e.clientX - r.left - sc.m.l) / sc.pw) * 240), 0, 240));
+  });
+  host.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') setNight(NIGHT.focus); });
+  host.addEventListener('keydown', function (e) {
+    var t = nightT;
+    if (e.key === 'ArrowRight') t += e.shiftKey ? 30 : 5;
+    else if (e.key === 'ArrowLeft') t -= e.shiftKey ? 30 : 5;
+    else if (e.key === 'Home') t = 0;
+    else if (e.key === 'End') t = 240;
+    else if (e.key === 'Escape') t = NIGHT.focus;
+    else return;
+    e.preventDefault();
+    setNight(clamp(t, 0, 240));
+    $('#ncLive').textContent = hhmm(nightT) + ' · ' + tempAt(nightT).toFixed(1) + ' °C · ' + Math.round(hrAt(nightT)) + ' bpm · ' + tr(LV[nightLevel(nightT)]);
+  });
+  var lastW = 0, raf = 0;
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(function () {
+      var w = Math.round(host.clientWidth);
+      if (w === lastW) return;
+      lastW = w; cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(function () { drawNight(); setNight(nightT); });
+    }).observe(host);
+  }
+}
+
+/* ---------- scenario player ---------- */
+var ps = { scn: 'night', i: SCN.night.start };
+function renderPlayer() {
+  var s = SCN[ps.scn], st = s.steps[ps.i];
+  $$('#player [role="tab"]').forEach(function (b) {
+    var on = b.getAttribute('data-scn') === ps.scn;
+    b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1;
+  });
+  $('#scnPanel').setAttribute('aria-labelledby', 'tab-' + ps.scn);
+  $('#scnIntro').textContent = tr(s.intro);
+  var list = $('#scnSteps');
+  list.style.setProperty('--n', String(s.steps.length));
+  list.innerHTML = s.steps.map(function (x, i) {
+    return '<li><button type="button" class="step-btn" data-i="' + i + '" data-l="' + x.lv + '"' + (i === ps.i ? ' aria-current="step"' : '') + '>' +
+      '<span class="sb-top"><span class="sb-time">' + x.t + '</span>' + METER + '</span><span class="sb-title">' + tr(x.title) + '</span><span class="sr-only">' + tr(LV[x.lv]) + '</span></button></li>';
+  }).join('');
+  var tl = st.tl || s.tl, ac = st.ac === 'na' ? '—' : tr(st.ac === 'on' ? T.acOn : T.acOff);
+  var sigs = ['E', 'P', 'G', 'R'].map(function (k) {
+    var on = st.sig.indexOf(k) > -1;
+    return '<li class="sig' + (on ? ' on' : '') + '"><span class="sig-top"><span class="sig-k">' + k + '</span><span class="sig-v">' + (on ? icon('check') + tr(T.yes) : tr(T.no)) + '</span></span>' +
+      '<span class="sig-t">' + tr(SIG[k].t) + '</span><span class="sig-s">' + tr(SIG[k].s) + '</span></li>';
+  }).join('');
+  var acts = st.acts.length
+    ? '<ul>' + st.acts.map(function (a) { return '<li>' + icon(a.ic) + '<span>' + tr(a.t) + '</span></li>'; }).join('') + '</ul>'
+    : '<p class="p-none">' + tr(st.none || T.noAct) + '</p>';
+  $('#scnStep').innerHTML =
+    '<div class="p-top"><div class="p-when"><span class="p-time">' + st.t + '</span><h3 class="p-title">' + tr(st.title) + '</h3></div>' +
+      '<span class="lvl lvl-lg" data-l="' + st.lv + '">' + METER + '<span>' + tr(LV[st.lv]) + (st.lv ? ' · ' + tr(LVSUB[st.lv]) : '') + '</span></span></div>' +
+    '<dl class="p-reads">' +
+      '<div><dt>' + tr(T.temp) + ' · ' + tr(tl) + '</dt><dd>' + st.temp.toFixed(1) + '<small> °C</small></dd></div>' +
+      '<div><dt>' + tr(T.hr) + '</dt><dd>' + st.hr + '<small> bpm</small></dd><dd class="sub">' + tr(T.base) + ' ' + s.base + ' · ' + sign(st.hr - s.base) + '</dd></div>' +
+      '<div><dt>' + tr(T.state) + '</dt><dd class="txt">' + tr(STATE[st.st]) + '</dd></div>' +
+      '<div><dt>' + tr(T.ac) + '</dt><dd class="txt">' + ac + '</dd>' + (st.ac === 'na' ? '<dd class="sub">' + tr(T.outdoors) + '</dd>' : '') + '</div>' +
+    '</dl>' +
+    '<div class="p-block"><h4>' + tr(T.sigs) + '</h4><ul class="sigs">' + sigs + '</ul></div>' +
+    '<div class="p-block"><h4>' + tr(T.say) + '</h4><p class="p-say">' + tr(st.say) + '</p></div>' +
+    '<div class="p-block p-acts"><h4>' + tr(T.acts) + '</h4>' + acts + '</div>';
+  $('#scnPrev').disabled = ps.i === 0;
+  $('#scnPrevT').textContent = tr(T.prev);
+  $('#scnCount').textContent = (ps.i + 1) + ' / ' + s.steps.length;
+  $('#scnNextT').textContent = ps.i === s.steps.length - 1 ? tr(T.nextScn) : tr(T.next);
+}
+$('#scnSteps').addEventListener('click', function (e) {
+  var b = e.target.closest('.step-btn'); if (!b) return;
+  ps.i = +b.getAttribute('data-i'); renderPlayer();
+  var cur = $('#scnSteps .step-btn[data-i="' + ps.i + '"]'); if (cur) cur.focus();
+});
+$('#scnPrev').addEventListener('click', function () { if (ps.i > 0) { ps.i--; renderPlayer(); } });
+$('#scnNext').addEventListener('click', function () {
+  var s = SCN[ps.scn];
+  if (ps.i < s.steps.length - 1) ps.i++;
+  else { ps.scn = ORDER[(ORDER.indexOf(ps.scn) + 1) % ORDER.length]; ps.i = 0; }
+  renderPlayer();
+});
+var tabs = $$('#player [role="tab"]');
+tabs.forEach(function (b, idx) {
+  b.addEventListener('click', function () {
+    var id = b.getAttribute('data-scn');
+    if (ps.scn !== id) { ps.scn = id; ps.i = 0; renderPlayer(); }
+  });
+  b.addEventListener('keydown', function (e) {
+    var j = null;
+    if (e.key === 'ArrowRight') j = (idx + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft') j = (idx - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') j = 0;
+    else if (e.key === 'End') j = tabs.length - 1;
+    if (j === null) return;
+    e.preventDefault(); tabs[j].focus(); tabs[j].click();
+  });
+});
+
+/* ---------- daily heat index (NWS Rothfusz regression, °C in and out) ---------- */
+function heatIndexC(tC, rh) {
+  var T = tC * 9 / 5 + 32;
+  var hi = 0.5 * (T + 61 + (T - 68) * 1.2 + rh * 0.094);
+  if (hi > 79) {
+    hi = -42.379 + 2.04901523 * T + 10.14333127 * rh - 0.22475541 * T * rh - 0.00683783 * T * T
+       - 0.05481717 * rh * rh + 0.00122874 * T * T * rh + 0.00085282 * T * rh * rh - 0.00000199 * T * T * rh * rh;
+    if (rh < 13 && T >= 80 && T <= 112) hi -= ((13 - rh) / 4) * Math.sqrt((17 - Math.abs(T - 95)) / 17);
+    else if (rh > 85 && T >= 80 && T <= 87) hi += ((rh - 85) / 10) * ((87 - T) / 5);
+  }
+  return (hi - 32) * 5 / 9;
+}
+function updateHI() {
+  var tIn = $('#hiT'), rIn = $('#hiRH'); if (!tIn || !rIn) return;
+  var t = +tIn.value, rh = +rIn.value;
+  var hi = Math.round(heatIndexC(t, rh) * 10) / 10;
+  var k = hi < 26.7 ? 0 : hi < 32.2 ? 1 : hi < 40.6 ? 2 : 3;
+  var shown = hi > 54.4 ? '54.4+' : hi.toFixed(1);
+  $('#hiTOut').textContent = t.toFixed(1) + ' °C';
+  $('#hiRHOut').textContent = rh + '%';
+  $('#hiNum').textContent = shown;
+  $('#hiTier').setAttribute('data-t', String(k));
+  $('#hiTierT').textContent = tr(HI_LV[k].name);
+  $$('.hs-seg').forEach(function (seg) { seg.classList.toggle('on', +seg.getAttribute('data-t') === k); });
+  var frac = (clamp(hi, 22, 56) - 22) / 34;
+  $('#hiMark').style.left = 'calc((100% - 6px) * ' + frac.toFixed(4) + ' + ' + (k * 2) + 'px)';
+  $('#hiNotifTitle').textContent = (lang() === 'en' ? 'Heat index today ' : '今日熱指數 ') + shown + ' °C · ' + tr(HI_LV[k].name);
+  $('#hiNotifBody').textContent = tr(HI_LV[k].msg);
+}
+$('#hiT').addEventListener('input', updateHI);
+$('#hiRH').addEventListener('input', updateHI);
+
+/* ---------- language ---------- */
+function renderAll() {
+  var l = lang();
+  $$('[data-set-lang]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-set-lang') === l)); });
+  $$('[data-aria-zh]').forEach(function (el) { el.setAttribute('aria-label', l === 'en' ? el.getAttribute('data-aria-en') : el.getAttribute('data-aria-zh')); });
+  drawNight(); setNight(nightT); buildNightTable(); renderPlayer(); updateHI();
+}
+$$('[data-set-lang]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var l = b.getAttribute('data-set-lang');
+    root.setAttribute('data-lang', l);
+    root.setAttribute('lang', l === 'en' ? 'en' : 'zh-Hant');
+    try { localStorage.setItem('hp-lang', l); } catch (e) {}
+    renderAll();
+  });
+});
+renderAll();
+})();
+</script>
+</body>
+</html>
